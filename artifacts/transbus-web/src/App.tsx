@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, Link, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
@@ -8,6 +8,8 @@ import Panel from "@/pages/Panel";
 import PanelVehiculos from "@/pages/PanelVehiculos";
 import PanelNuevaRuta from "@/pages/PanelNuevaRuta";
 import PanelTurnos from "@/pages/PanelTurnos";
+import PanelLogin from "@/pages/PanelLogin";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient({
@@ -62,10 +64,15 @@ function MoonIcon() {
   );
 }
 
-function NavBar() {
+interface NavBarProps {
+  isAuthenticated: boolean;
+  onLogout: () => void;
+}
+
+function NavBar({ isAuthenticated, onLogout }: NavBarProps) {
   const [location] = useLocation();
   const { isLight, toggle } = useTheme();
-  const isPanel = location.startsWith("/panel");
+  const isPanel = location.startsWith("/panel") && location !== "/panel/login";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 glass">
@@ -82,15 +89,19 @@ function NavBar() {
           <span className="font-bold text-foreground tracking-tight">TransBus</span>
         </Link>
         <nav className="flex items-center gap-1">
-          <Link href="/" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${!isPanel ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+          <Link href="/" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${!isPanel && location !== "/panel/login" ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
             Rutas
           </Link>
-          <Link href="/panel" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${isPanel && !location.startsWith('/panel/turnos') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-            Panel
-          </Link>
-          <Link href="/panel/turnos" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${location.startsWith('/panel/turnos') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-            Turnos
-          </Link>
+          {isAuthenticated && (
+            <>
+              <Link href="/panel" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${isPanel && !location.startsWith('/panel/turnos') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                Panel
+              </Link>
+              <Link href="/panel/turnos" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${location.startsWith('/panel/turnos') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                Turnos
+              </Link>
+            </>
+          )}
           <div className="w-px h-5 bg-border mx-1" />
           <button
             onClick={toggle}
@@ -99,23 +110,87 @@ function NavBar() {
           >
             {isLight ? <MoonIcon /> : <SunIcon />}
           </button>
+          {isAuthenticated && (
+            <>
+              <div className="w-px h-5 bg-border mx-1" />
+              <button
+                onClick={onLogout}
+                className="px-3 py-1.5 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1.5"
+                title="Cerrar sesion"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M10 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                  <path d="M7 11l3-3-3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="10" y1="8" x2="2" y2="8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+                Salir
+              </button>
+            </>
+          )}
         </nav>
       </div>
     </header>
   );
 }
 
+function PanelGuard({ children, authState, markAuthenticated }: {
+  children: React.ReactNode;
+  authState: "loading" | "authenticated" | "unauthenticated";
+  markAuthenticated: () => void;
+}) {
+  if (authState === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Verificando sesion...</p>
+        </div>
+      </div>
+    );
+  }
+  if (authState === "unauthenticated") {
+    return <PanelLogin onLogin={markAuthenticated} />;
+  }
+  return <>{children}</>;
+}
+
 function Router() {
+  const { state, logout, markAuthenticated } = useAdminAuth();
+  const isAuthenticated = state === "authenticated";
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <div className="pt-14 min-h-screen">
-      <NavBar />
+      <NavBar isAuthenticated={isAuthenticated} onLogout={handleLogout} />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/rutas/:id" component={RouteMap} />
-        <Route path="/panel" component={Panel} />
-        <Route path="/panel/vehiculos" component={PanelVehiculos} />
-        <Route path="/panel/rutas/nueva" component={PanelNuevaRuta} />
-        <Route path="/panel/turnos" component={PanelTurnos} />
+        <Route path="/panel/login">
+          {isAuthenticated ? <Redirect to="/panel" /> : <PanelLogin onLogin={markAuthenticated} />}
+        </Route>
+        <Route path="/panel">
+          <PanelGuard authState={state} markAuthenticated={markAuthenticated}>
+            <Panel />
+          </PanelGuard>
+        </Route>
+        <Route path="/panel/vehiculos">
+          <PanelGuard authState={state} markAuthenticated={markAuthenticated}>
+            <PanelVehiculos />
+          </PanelGuard>
+        </Route>
+        <Route path="/panel/rutas/nueva">
+          <PanelGuard authState={state} markAuthenticated={markAuthenticated}>
+            <PanelNuevaRuta />
+          </PanelGuard>
+        </Route>
+        <Route path="/panel/turnos">
+          <PanelGuard authState={state} markAuthenticated={markAuthenticated}>
+            <PanelTurnos />
+          </PanelGuard>
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </div>
