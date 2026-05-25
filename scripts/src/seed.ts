@@ -49,15 +49,16 @@ async function seed() {
   // ─── Paradas Ruta 1: San Juan Zitlaltepec → Metro La Raza ─────────────────
   // Coordenadas reales del trayecto
   const paradasRuta1 = [
-    { name: "San Juan Zitlaltepec",                  lat: 19.8102214, lng: -99.1467697, order: 1 },
-    { name: "Mercado Zumpango / Jorge Jiménez Cantú", lat: 19.7977500, lng: -99.1044400, order: 2 },
-    { name: "San Pedro de la Laguna",                 lat: 19.7792098, lng: -99.1151801, order: 3 },
-    { name: "Circuito Mexiquense Bicentenario",       lat: 19.7820000, lng: -99.0460000, order: 4 },
-    { name: "Carr. México - Pachuca",                 lat: 19.5440000, lng: -99.0810000, order: 5 },
-    { name: "Metro Indios Verdes",                    lat: 19.4850750, lng: -99.1254861, order: 6 },
-    { name: "Metro 18 de Marzo",                      lat: 19.4789000, lng: -99.1305000, order: 7 },
-    { name: "Metro Potrero",                          lat: 19.4736000, lng: -99.1352000, order: 8 },
-    { name: "Metro La Raza",                          lat: 19.4682950, lng: -99.1401861, order: 9 },
+    { name: "San Juan Zitlaltepec",                  lat: 19.8102214, lng: -99.1467697, order: 1  },
+    { name: "Estacion Brujas",                        lat: 19.7992966, lng: -99.1033957, order: 2  },
+    { name: "Mercado Zumpango / Jorge Jiménez Cantú", lat: 19.7977500, lng: -99.1044400, order: 3  },
+    { name: "San Pedro de la Laguna",                 lat: 19.7792098, lng: -99.1151801, order: 4  },
+    { name: "Circuito Mexiquense Bicentenario",       lat: 19.7820000, lng: -99.0460000, order: 5  },
+    { name: "Carr. México - Pachuca",                 lat: 19.5440000, lng: -99.0810000, order: 6  },
+    { name: "Metro Indios Verdes",                    lat: 19.4850750, lng: -99.1254861, order: 7  },
+    { name: "Metro 18 de Marzo",                      lat: 19.4789000, lng: -99.1305000, order: 8  },
+    { name: "Metro Potrero",                          lat: 19.4736000, lng: -99.1352000, order: 9  },
+    { name: "Metro La Raza",                          lat: 19.4682950, lng: -99.1401861, order: 10 },
   ];
 
   await db.insert(stopsTable).values(

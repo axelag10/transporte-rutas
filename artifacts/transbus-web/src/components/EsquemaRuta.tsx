@@ -25,7 +25,6 @@ function posicionVehiculo(
     const d = distancia(vehicle.lat, vehicle.lng, s.lat, s.lng);
     if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
   });
-  // Interpola hacia la siguiente parada si no es la última
   const nextIdx = nearestIdx < sorted.length - 1 ? nearestIdx + 1 : nearestIdx - 1;
   const current = sorted[nearestIdx];
   const next = sorted[nextIdx];
@@ -76,33 +75,31 @@ export function EsquemaRuta({ stops, vehicles, color }: Props) {
 
           return (
             <g key={stop.id}>
-              {/* círculo exterior (terminal más grande) */}
+              {/* círculo */}
               <circle
                 cx={LINE_X} cy={y}
                 r={isTerminal ? 13 : 10}
-                fill={isTerminal ? color : "hsl(215,28%,10%)"}
-                stroke={color}
+                fill={isTerminal ? color : "hsl(var(--secondary))"}
+                stroke={isTerminal ? "none" : color}
                 strokeWidth={isTerminal ? 0 : 2}
-                strokeOpacity={isTerminal ? 0 : 1}
               />
               {/* número */}
               <text
                 x={LINE_X} y={y}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fill={isTerminal ? "hsl(215,28%,9%)" : color}
+                fill={isTerminal ? "hsl(var(--primary-foreground))" : color}
                 fontSize={isTerminal ? 10 : 9}
                 fontWeight="700"
                 fontFamily="system-ui, sans-serif"
               >
                 {i + 1}
               </text>
-              {/* nombre de parada */}
+              {/* nombre */}
               <text
-                x={LINE_X + 20}
-                y={y}
+                x={LINE_X + 20} y={y}
                 dominantBaseline="central"
-                fill={isTerminal ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.75)"}
+                fill={isTerminal ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))"}
                 fontSize={isTerminal ? 12.5 : 11.5}
                 fontWeight={isTerminal ? "700" : "400"}
                 fontFamily="system-ui, sans-serif"
@@ -119,33 +116,29 @@ export function EsquemaRuta({ stops, vehicles, color }: Props) {
           if (vy === null) return null;
           return (
             <g key={v.vehicleId}>
-              {/* sombra / halo */}
               <circle cx={LINE_X} cy={vy} r="16" fill={color} fillOpacity="0.18" />
-              {/* círculo principal */}
               <circle cx={LINE_X} cy={vy} r="11" fill={color} />
-              {/* icono bus (B) */}
               <text
                 x={LINE_X} y={vy}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fill="hsl(215,28%,9%)"
+                fill="hsl(var(--primary-foreground))"
                 fontSize="10"
                 fontWeight="900"
                 fontFamily="system-ui, sans-serif"
               >
                 B
               </text>
-              {/* etiqueta de placa */}
               <rect
                 x={LINE_X + 18} y={vy - 11}
                 width={v.plateNumber.length * 6.5 + 12}
                 height={22}
                 rx="5"
                 fill={color}
-                fillOpacity="0.2"
+                fillOpacity="0.15"
                 stroke={color}
                 strokeWidth="1"
-                strokeOpacity="0.6"
+                strokeOpacity="0.5"
               />
               <text
                 x={LINE_X + 24} y={vy}
