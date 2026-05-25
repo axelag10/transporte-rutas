@@ -49,30 +49,32 @@ async function seed() {
   // ─── Paradas Ruta 1: San Juan Zitlaltepec → Metro La Raza ─────────────────
   // Coordenadas reales del trayecto
   const paradasRuta1 = [
-    // Origen: San Juan Zitlaltepec
-    { name: "San Juan Zitlaltepec", lat: 19.8263, lng: -99.0621, order: 1 },
-    // Baja por Av. 16 de Septiembre hacia Zumpango
-    { name: "Av. 16 de Septiembre / Zumpango Norte", lat: 19.8142, lng: -99.0754, order: 2 },
-    // Entra a Zumpango por Melchor Ocampo
-    { name: "Av. Melchor Ocampo (Zumpango)", lat: 19.8012, lng: -99.0912, order: 3 },
-    // Sube por Jorge Jiménez Cantú
-    { name: "Calle Jorge Jiménez Cantú", lat: 19.7923, lng: -99.1043, order: 4 },
-    // Conecta con Av. de los Insurgentes
-    { name: "Av. de los Insurgentes (Zumpango)", lat: 19.7812, lng: -99.1178, order: 5 },
-    // Carretera Cuautitlán - Zumpango
-    { name: "Carr. Cuautitlán - Zumpango", lat: 19.7623, lng: -99.1334, order: 6 },
-    // Circuito Exterior Mexiquense Bicentenario
-    { name: "Mexiquense Bicentenario (norte)", lat: 19.7134, lng: -99.1589, order: 7 },
-    { name: "Mexiquense Bicentenario (sur)", lat: 19.6512, lng: -99.1823, order: 8 },
-    // Conecta con Carretera México - Pachuca
-    { name: "Carr. México - Pachuca (Ecatepec)", lat: 19.5934, lng: -99.1712, order: 9 },
-    { name: "Carr. México - Pachuca (Gustavo A. Madero)", lat: 19.5534, lng: -99.1534, order: 10 },
+    // Origen
+    { name: "San Juan Zitlaltepec", lat: 19.8102, lng: -99.1468, order: 1 },
+    // Av. 16 de Septiembre rumbo a Zumpango (va hacia el este)
+    { name: "Av. 16 de Septiembre", lat: 19.8072, lng: -99.1310, order: 2 },
+    // Carr. Zumpango-Apaxco / entrada por Melchor Ocampo
+    { name: "Carr. Zumpango - Apaxco / Melchor Ocampo", lat: 19.8022, lng: -99.1155, order: 3 },
+    // Mercado de Zumpango / Jorge Jiménez Cantú
+    { name: "Mercado Zumpango / Jorge Jiménez Cantú", lat: 19.7978, lng: -99.1044, order: 4 },
+    // Av. de los Insurgentes (Zumpango sur)
+    { name: "Av. de los Insurgentes (Zumpango)", lat: 19.7895, lng: -99.1095, order: 5 },
+    // San Pedro de la Laguna / Carr. Cuautitlán-Zumpango
+    { name: "San Pedro de la Laguna", lat: 19.7792, lng: -99.1152, order: 6 },
+    // Circuito Mexiquense Bicentenario (Ojo de Agua)
+    { name: "Circuito Mexiquense / Ojo de Agua", lat: 19.7045, lng: -99.0698, order: 7 },
+    // Ecatepec norte — Los Héroes
+    { name: "Los Héroes Ecatepec", lat: 19.6542, lng: -99.0448, order: 8 },
+    // Ecatepec centro — Av. Central
+    { name: "Ecatepec / Av. Central", lat: 19.6048, lng: -99.0342, order: 9 },
+    // Enlace Carr. México-Pachuca (Ciudad Azteca)
+    { name: "Ciudad Azteca / Carr. México - Pachuca", lat: 19.5698, lng: -99.0652, order: 10 },
+    // Bajando por Méx-Pachuca hacia Indios Verdes
+    { name: "Av. de los Cien Metros", lat: 19.5445, lng: -99.0980, order: 11 },
     // Metro Indios Verdes
-    { name: "Metro Indios Verdes", lat: 19.5243, lng: -99.1298, order: 11 },
-    // Av. Insurgentes Norte hacia La Raza
-    { name: "Insurgentes Norte", lat: 19.5056, lng: -99.1378, order: 12 },
+    { name: "Metro Indios Verdes", lat: 19.5243, lng: -99.1298, order: 12 },
     // Metro La Raza (destino final)
-    { name: "Metro La Raza", lat: 19.4823, lng: -99.1412, order: 13 },
+    { name: "Metro La Raza", lat: 19.4683, lng: -99.1402, order: 13 },
   ];
 
   await db.insert(stopsTable).values(
