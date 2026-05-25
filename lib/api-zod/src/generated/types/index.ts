@@ -7,14 +7,18 @@
  */
 
 export * from './createRoute';
+export * from './createShift';
 export * from './createStop';
 export * from './createVehicle';
 export * from './etaResponse';
 export * from './healthStatus';
+export * from './listShiftsParams';
 export * from './positionAck';
 export * from './route';
 export * from './routeDetail';
 export * from './routeLive';
+export * from './shiftDetail';
+export * from './shiftRecord';
 export * from './stop';
 export * from './stopEta';
 export * from './updatePosition';

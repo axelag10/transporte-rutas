@@ -206,6 +206,65 @@ paths:
               schema:
                 $ref: "#/components/schemas/EtaResponse"
 
+  /shifts:
+    post:
+      operationId: createShift
+      tags: [shifts]
+      summary: Inicia un nuevo turno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShift"
+      responses:
+        "201":
+          description: Turno iniciado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShiftRecord"
+    get:
+      operationId: listShifts
+      tags: [shifts]
+      summary: Lista turnos (opcionalmente filtrado por vehículo)
+      parameters:
+        - name: vehicleId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de turnos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShiftDetail"
+
+  /shifts/{id}/end:
+    patch:
+      operationId: endShift
+      tags: [shifts]
+      summary: Finaliza un turno activo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Turno finalizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShiftRecord"
+        "404":
+          description: Turno no encontrado
+
   /routes/{id}/live:
     get:
       operationId: getRouteLive
@@ -447,3 +506,50 @@ components:
           items:
             $ref: "#/components/schemas/VehicleLive"
       required: [routeId, vehicles]
+
+    CreateShift:
+      type: object
+      properties:
+        vehicleId:
+          type: integer
+      required: [vehicleId]
+
+    ShiftRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        vehicleId:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        positionsCount:
+          type: integer
+      required: [id, vehicleId, startedAt, positionsCount]
+
+    ShiftDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        vehicleId:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        positionsCount:
+          type: integer
+        plateNumber:
+          type: string
+        driverName:
+          type: string
+      required: [id, vehicleId, startedAt, positionsCount, plateNumber, driverName]

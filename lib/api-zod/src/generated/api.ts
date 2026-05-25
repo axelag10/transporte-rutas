@@ -175,6 +175,49 @@ export const GetEtaResponse = zod.object({
 
 
 /**
+ * @summary Inicia un nuevo turno
+ */
+export const CreateShiftBody = zod.object({
+  "vehicleId": zod.number()
+})
+
+
+/**
+ * @summary Lista turnos (opcionalmente filtrado por vehículo)
+ */
+export const ListShiftsQueryParams = zod.object({
+  "vehicleId": zod.coerce.number().optional()
+})
+
+export const ListShiftsResponseItem = zod.object({
+  "id": zod.number(),
+  "vehicleId": zod.number(),
+  "startedAt": zod.coerce.date(),
+  "endedAt": zod.coerce.date().nullish(),
+  "positionsCount": zod.number(),
+  "plateNumber": zod.string(),
+  "driverName": zod.string()
+})
+export const ListShiftsResponse = zod.array(ListShiftsResponseItem)
+
+
+/**
+ * @summary Finaliza un turno activo
+ */
+export const EndShiftParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const EndShiftResponse = zod.object({
+  "id": zod.number(),
+  "vehicleId": zod.number(),
+  "startedAt": zod.coerce.date(),
+  "endedAt": zod.coerce.date().nullish(),
+  "positionsCount": zod.number()
+})
+
+
+/**
  * @summary Posiciones actuales de todos los vehículos en una ruta
  */
 export const GetRouteLiveParams = zod.object({

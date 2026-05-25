@@ -111,3 +111,29 @@ export interface RouteLive {
   vehicles: VehicleLive[];
 }
 
+export interface CreateShift {
+  vehicleId: number;
+}
+
+export interface ShiftRecord {
+  id: number;
+  vehicleId: number;
+  startedAt: string;
+  endedAt?: string | null;
+  positionsCount: number;
+}
+
+export interface ShiftDetail {
+  id: number;
+  vehicleId: number;
+  startedAt: string;
+  endedAt?: string | null;
+  positionsCount: number;
+  plateNumber: string;
+  driverName: string;
+}
+
+export type ListShiftsParams = {
+vehicleId?: number;
+};
+
