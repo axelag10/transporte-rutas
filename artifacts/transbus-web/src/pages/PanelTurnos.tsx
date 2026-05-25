@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { useListShifts, useListVehicles, useListRoutes } from "@workspace/api-client-react";
+import { AlertasBanner } from "@/components/AlertasBanner";
 import { useState, useMemo } from "react";
 
 interface ShiftDetail {
@@ -126,6 +127,7 @@ export default function PanelTurnos() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
+      <AlertasBanner />
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

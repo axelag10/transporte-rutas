@@ -175,6 +175,28 @@ export const GetEtaResponse = zod.object({
 
 
 /**
+ * @summary Vehículos con turno activo que dejaron de reportar GPS
+ */
+export const listOfflineVehiclesQueryThresholdMinDefault = 10;
+
+export const ListOfflineVehiclesQueryParams = zod.object({
+  "thresholdMin": zod.coerce.number().default(listOfflineVehiclesQueryThresholdMinDefault)
+})
+
+export const ListOfflineVehiclesResponseItem = zod.object({
+  "shiftId": zod.number(),
+  "shiftStartedAt": zod.coerce.date(),
+  "vehicleId": zod.number(),
+  "plateNumber": zod.string(),
+  "driverName": zod.string(),
+  "routeId": zod.number(),
+  "lastPositionAt": zod.coerce.date().nullish(),
+  "minutesSilent": zod.number().nullish()
+})
+export const ListOfflineVehiclesResponse = zod.array(ListOfflineVehiclesResponseItem)
+
+
+/**
  * @summary Inicia un nuevo turno
  */
 export const CreateShiftBody = zod.object({

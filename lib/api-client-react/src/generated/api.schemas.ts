@@ -111,6 +111,17 @@ export interface RouteLive {
   vehicles: VehicleLive[];
 }
 
+export interface OfflineAlert {
+  shiftId: number;
+  shiftStartedAt: string;
+  vehicleId: number;
+  plateNumber: string;
+  driverName: string;
+  routeId: number;
+  lastPositionAt?: string | null;
+  minutesSilent?: number | null;
+}
+
 export interface CreateShift {
   vehicleId: number;
 }
@@ -132,6 +143,10 @@ export interface ShiftDetail {
   plateNumber: string;
   driverName: string;
 }
+
+export type ListOfflineVehiclesParams = {
+thresholdMin?: number;
+};
 
 export type ListShiftsParams = {
 vehicleId?: number;

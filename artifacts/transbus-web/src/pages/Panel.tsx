@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { useListRoutes, useGetRouteLive } from "@workspace/api-client-react";
+import { AlertasBanner } from "@/components/AlertasBanner";
 
 function RouteRow({ route }: { route: { id: number; name: string; color: string; active: boolean; description?: string | null } }) {
   const { data: live } = useGetRouteLive(route.id, {
@@ -52,6 +53,7 @@ export default function Panel() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
+      <AlertasBanner />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Panel de control</h1>

@@ -26,7 +26,9 @@ import type {
   CreateVehicle,
   EtaResponse,
   HealthStatus,
+  ListOfflineVehiclesParams,
   ListShiftsParams,
+  OfflineAlert,
   PositionAck,
   Route,
   RouteDetail,
@@ -786,6 +788,90 @@ export function useGetEta<TData = Awaited<ReturnType<typeof getEta>>, TError = E
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetEtaQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListOfflineVehiclesUrl = (params?: ListOfflineVehiclesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/vehicles/offline?${stringifiedParams}` : `/api/vehicles/offline`
+}
+
+/**
+ * @summary Vehículos con turno activo que dejaron de reportar GPS
+ */
+export const listOfflineVehicles = async (params?: ListOfflineVehiclesParams, options?: RequestInit): Promise<OfflineAlert[]> => {
+
+  return customFetch<OfflineAlert[]>(getListOfflineVehiclesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOfflineVehiclesQueryKey = (params?: ListOfflineVehiclesParams,) => {
+    return [
+    `/api/vehicles/offline`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListOfflineVehiclesQueryOptions = <TData = Awaited<ReturnType<typeof listOfflineVehicles>>, TError = ErrorType<unknown>>(params?: ListOfflineVehiclesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listOfflineVehicles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOfflineVehiclesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOfflineVehicles>>> = ({ signal }) => listOfflineVehicles(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOfflineVehicles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListOfflineVehiclesQueryResult = NonNullable<Awaited<ReturnType<typeof listOfflineVehicles>>>
+export type ListOfflineVehiclesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Vehículos con turno activo que dejaron de reportar GPS
+ */
+
+export function useListOfflineVehicles<TData = Awaited<ReturnType<typeof listOfflineVehicles>>, TError = ErrorType<unknown>>(
+ params?: ListOfflineVehiclesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listOfflineVehicles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListOfflineVehiclesQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

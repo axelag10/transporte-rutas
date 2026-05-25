@@ -18,6 +18,8 @@ tags:
     description: Vehículos / choferes
   - name: positions
     description: Posiciones GPS en tiempo real
+  - name: alerts
+    description: Alertas de vehículos sin señal
 
 paths:
   /healthz:
@@ -205,6 +207,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EtaResponse"
+
+  /vehicles/offline:
+    get:
+      operationId: listOfflineVehicles
+      tags: [alerts]
+      summary: Vehículos con turno activo que dejaron de reportar GPS
+      parameters:
+        - name: thresholdMin
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Lista de alertas de vehículos sin señal
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OfflineAlert"
 
   /shifts:
     post:
@@ -506,6 +530,31 @@ components:
           items:
             $ref: "#/components/schemas/VehicleLive"
       required: [routeId, vehicles]
+
+    OfflineAlert:
+      type: object
+      properties:
+        shiftId:
+          type: integer
+        shiftStartedAt:
+          type: string
+          format: date-time
+        vehicleId:
+          type: integer
+        plateNumber:
+          type: string
+        driverName:
+          type: string
+        routeId:
+          type: integer
+        lastPositionAt:
+          type: string
+          format: date-time
+          nullable: true
+        minutesSilent:
+          type: integer
+          nullable: true
+      required: [shiftId, shiftStartedAt, vehicleId, plateNumber, driverName, routeId]
 
     CreateShift:
       type: object
