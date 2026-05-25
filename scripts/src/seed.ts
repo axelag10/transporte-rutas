@@ -49,32 +49,17 @@ async function seed() {
   // ─── Paradas Ruta 1: San Juan Zitlaltepec → Metro La Raza ─────────────────
   // Coordenadas reales del trayecto
   const paradasRuta1 = [
-    // Origen
-    { name: "San Juan Zitlaltepec", lat: 19.8102, lng: -99.1468, order: 1 },
-    // Av. 16 de Septiembre rumbo a Zumpango (va hacia el este)
-    { name: "Av. 16 de Septiembre", lat: 19.8072, lng: -99.1310, order: 2 },
-    // Carr. Zumpango-Apaxco / entrada por Melchor Ocampo
-    { name: "Carr. Zumpango - Apaxco / Melchor Ocampo", lat: 19.8022, lng: -99.1155, order: 3 },
-    // Mercado de Zumpango / Jorge Jiménez Cantú
-    { name: "Mercado Zumpango / Jorge Jiménez Cantú", lat: 19.7978, lng: -99.1044, order: 4 },
-    // Av. de los Insurgentes (Zumpango sur)
-    { name: "Av. de los Insurgentes (Zumpango)", lat: 19.7895, lng: -99.1095, order: 5 },
-    // San Pedro de la Laguna / Carr. Cuautitlán-Zumpango
-    { name: "San Pedro de la Laguna", lat: 19.7792, lng: -99.1152, order: 6 },
-    // Circuito Mexiquense Bicentenario (Ojo de Agua)
-    { name: "Circuito Mexiquense / Ojo de Agua", lat: 19.7045, lng: -99.0698, order: 7 },
-    // Ecatepec norte — Los Héroes
-    { name: "Los Héroes Ecatepec", lat: 19.6542, lng: -99.0448, order: 8 },
-    // Ecatepec centro — Av. Central
-    { name: "Ecatepec / Av. Central", lat: 19.6048, lng: -99.0342, order: 9 },
-    // Enlace Carr. México-Pachuca (Ciudad Azteca)
-    { name: "Ciudad Azteca / Carr. México - Pachuca", lat: 19.5698, lng: -99.0652, order: 10 },
-    // Bajando por Méx-Pachuca hacia Indios Verdes
-    { name: "Av. de los Cien Metros", lat: 19.5445, lng: -99.0980, order: 11 },
-    // Metro Indios Verdes
-    { name: "Metro Indios Verdes", lat: 19.5243, lng: -99.1298, order: 12 },
-    // Metro La Raza (destino final)
-    { name: "Metro La Raza", lat: 19.4683, lng: -99.1402, order: 13 },
+    { name: "San Juan Zitlaltepec",                  lat: 19.8102214, lng: -99.1467697, order: 1  },
+    { name: "Mercado Zumpango / Jorge Jiménez Cantú", lat: 19.7977500, lng: -99.1044400, order: 2  },
+    { name: "San Pedro de la Laguna",                 lat: 19.7792098, lng: -99.1151801, order: 3  },
+    { name: "Circuito Mexiquense Bicentenario",       lat: 19.7820000, lng: -99.0460000, order: 4  },
+    { name: "Los Héroes Ecatepec",                   lat: 19.6188909, lng: -99.0296309, order: 5  },
+    { name: "Ecatepec / Av. Central",                lat: 19.5981063, lng: -99.0398235, order: 6  },
+    { name: "Carr. México - Pachuca",                 lat: 19.5440000, lng: -99.0810000, order: 7  },
+    { name: "Av. de los Cien Metros",                 lat: 19.4953580, lng: -99.1194680, order: 8  },
+    { name: "Metro Indios Verdes",                    lat: 19.4850750, lng: -99.1254861, order: 9  },
+    { name: "Insurgentes Norte",                      lat: 19.4769100, lng: -99.1321710, order: 10 },
+    { name: "Metro La Raza",                          lat: 19.4682950, lng: -99.1401861, order: 11 },
   ];
 
   await db.insert(stopsTable).values(
