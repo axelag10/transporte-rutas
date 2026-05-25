@@ -1,7 +1,7 @@
 import { useParams, Link } from "wouter";
 import { useGetRoute, useGetRouteLive, useGetEta } from "@workspace/api-client-react";
 import type { StopEta, VehicleLive, Stop } from "@workspace/api-client-react";
-import { MapaLeaflet } from "@/components/MapaLeaflet";
+import { EsquemaRuta } from "@/components/EsquemaRuta";
 
 function EtaList({ vehicleId, routeColor }: { vehicleId: number; routeColor: string }) {
   const { data: eta, isLoading } = useGetEta(vehicleId, {
@@ -115,7 +115,7 @@ export default function RouteMap() {
               <span className="text-xs text-muted-foreground">Actualiza cada 5 seg</span>
             </div>
             <div style={{ height: 340 }}>
-              <MapaLeaflet stops={stops} vehicles={vehicles} color={route.color} />
+              <EsquemaRuta stops={stops} vehicles={vehicles} color={route.color} />
             </div>
           </div>
 
