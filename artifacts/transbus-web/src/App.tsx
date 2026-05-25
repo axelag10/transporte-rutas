@@ -7,6 +7,7 @@ import RouteMap from "@/pages/RouteMap";
 import Panel from "@/pages/Panel";
 import PanelVehiculos from "@/pages/PanelVehiculos";
 import PanelNuevaRuta from "@/pages/PanelNuevaRuta";
+import PanelTurnos from "@/pages/PanelTurnos";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,8 +40,11 @@ function NavBar() {
           <Link href="/" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${!isPanel ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
             Rutas
           </Link>
-          <Link href="/panel" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${isPanel ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+          <Link href="/panel" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${isPanel && !location.startsWith('/panel/turnos') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
             Panel
+          </Link>
+          <Link href="/panel/turnos" className={`px-3 py-1.5 text-sm rounded-md transition-colors ${location.startsWith('/panel/turnos') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+            Turnos
           </Link>
         </nav>
       </div>
@@ -58,6 +62,7 @@ function Router() {
         <Route path="/panel" component={Panel} />
         <Route path="/panel/vehiculos" component={PanelVehiculos} />
         <Route path="/panel/rutas/nueva" component={PanelNuevaRuta} />
+        <Route path="/panel/turnos" component={PanelTurnos} />
         <Route component={NotFound} />
       </Switch>
     </div>
