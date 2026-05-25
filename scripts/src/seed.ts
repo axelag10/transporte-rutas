@@ -27,9 +27,9 @@ async function seed() {
   const [rutaZumpango] = await db
     .insert(routesTable)
     .values({
-      name: "San Juan Z - Metro La Raza",
+      name: "San Juan Zitlaltepec - Metro La Raza",
       description:
-        "Sale de San Juan Zumpango, pasa por Mercado Zumpango, ingresa al Mexiquense, parada 30-30, Metro Indios Verdes y llega a Metro La Raza",
+        "Sale de San Juan Zitlaltepec por Av. 16 de Septiembre, Zumpango por Melchor Ocampo y Jorge Jiménez Cantú, conecta con Circuito Mexiquense Bicentenario, Carretera México-Pachuca, Metro Indios Verdes y Metro La Raza",
       color: "#0ea5e9",
       active: true,
     })
@@ -46,19 +46,33 @@ async function seed() {
     })
     .returning();
 
-  // ─── Paradas Ruta 1: San Juan Z → Metro La Raza ──────────────────────────────
+  // ─── Paradas Ruta 1: San Juan Zitlaltepec → Metro La Raza ─────────────────
   // Coordenadas reales del trayecto
   const paradasRuta1 = [
-    { name: "San Juan Zumpango", lat: 19.8011, lng: -99.0823, order: 1 },
-    { name: "Mercado Zumpango", lat: 19.7983, lng: -99.0892, order: 2 },
-    { name: "Libramiento Zumpango", lat: 19.7956, lng: -99.0991, order: 3 },
-    { name: "Caseta Mexiquense Zumpango", lat: 19.7878, lng: -99.1142, order: 4 },
-    { name: "Parada 30-30 Mexiquense", lat: 19.6823, lng: -99.1534, order: 5 },
-    { name: "Auchan / Echegaray", lat: 19.5912, lng: -99.2134, order: 6 },
-    { name: "Toreo / Periférico Norte", lat: 19.5421, lng: -99.2012, order: 7 },
-    { name: "Metro Indios Verdes", lat: 19.5243, lng: -99.1298, order: 8 },
-    { name: "Insurgentes Norte", lat: 19.5056, lng: -99.1378, order: 9 },
-    { name: "Metro La Raza", lat: 19.4823, lng: -99.1412, order: 10 },
+    // Origen: San Juan Zitlaltepec
+    { name: "San Juan Zitlaltepec", lat: 19.8263, lng: -99.0621, order: 1 },
+    // Baja por Av. 16 de Septiembre hacia Zumpango
+    { name: "Av. 16 de Septiembre / Zumpango Norte", lat: 19.8142, lng: -99.0754, order: 2 },
+    // Entra a Zumpango por Melchor Ocampo
+    { name: "Av. Melchor Ocampo (Zumpango)", lat: 19.8012, lng: -99.0912, order: 3 },
+    // Sube por Jorge Jiménez Cantú
+    { name: "Calle Jorge Jiménez Cantú", lat: 19.7923, lng: -99.1043, order: 4 },
+    // Conecta con Av. de los Insurgentes
+    { name: "Av. de los Insurgentes (Zumpango)", lat: 19.7812, lng: -99.1178, order: 5 },
+    // Carretera Cuautitlán - Zumpango
+    { name: "Carr. Cuautitlán - Zumpango", lat: 19.7623, lng: -99.1334, order: 6 },
+    // Circuito Exterior Mexiquense Bicentenario
+    { name: "Mexiquense Bicentenario (norte)", lat: 19.7134, lng: -99.1589, order: 7 },
+    { name: "Mexiquense Bicentenario (sur)", lat: 19.6512, lng: -99.1823, order: 8 },
+    // Conecta con Carretera México - Pachuca
+    { name: "Carr. México - Pachuca (Ecatepec)", lat: 19.5934, lng: -99.1712, order: 9 },
+    { name: "Carr. México - Pachuca (Gustavo A. Madero)", lat: 19.5534, lng: -99.1534, order: 10 },
+    // Metro Indios Verdes
+    { name: "Metro Indios Verdes", lat: 19.5243, lng: -99.1298, order: 11 },
+    // Av. Insurgentes Norte hacia La Raza
+    { name: "Insurgentes Norte", lat: 19.5056, lng: -99.1378, order: 12 },
+    // Metro La Raza (destino final)
+    { name: "Metro La Raza", lat: 19.4823, lng: -99.1412, order: 13 },
   ];
 
   await db.insert(stopsTable).values(
@@ -113,76 +127,21 @@ async function seed() {
 
   const turnos = [
     // Turno activo en curso (Miguel - MEX-1234)
-    {
-      vehicleId: vehiculosRuta1[0].id,
-      startedAt: horasAtras(2),
-      endedAt: null,
-      positionsCount: 143,
-    },
+    { vehicleId: vehiculosRuta1[0].id, startedAt: horasAtras(2), endedAt: null, positionsCount: 143 },
     // Turnos de hoy (ya cerrados)
-    {
-      vehicleId: vehiculosRuta1[1].id,
-      startedAt: diasAtras(0, 6),
-      endedAt: diasAtras(0, 14),
-      positionsCount: 512,
-    },
-    {
-      vehicleId: vehiculosRuta2[0].id,
-      startedAt: diasAtras(0, 7),
-      endedAt: diasAtras(0, 15),
-      positionsCount: 388,
-    },
+    { vehicleId: vehiculosRuta1[1].id, startedAt: diasAtras(0, 6), endedAt: diasAtras(0, 14), positionsCount: 512 },
+    { vehicleId: vehiculosRuta2[0].id, startedAt: diasAtras(0, 7), endedAt: diasAtras(0, 15), positionsCount: 388 },
     // Ayer
-    {
-      vehicleId: vehiculosRuta1[0].id,
-      startedAt: diasAtras(1, 6),
-      endedAt: diasAtras(1, 14),
-      positionsCount: 498,
-    },
-    {
-      vehicleId: vehiculosRuta1[2].id,
-      startedAt: diasAtras(1, 7),
-      endedAt: diasAtras(1, 16),
-      positionsCount: 621,
-    },
-    {
-      vehicleId: vehiculosRuta2[1].id,
-      startedAt: diasAtras(1, 8),
-      endedAt: diasAtras(1, 13),
-      positionsCount: 295,
-    },
+    { vehicleId: vehiculosRuta1[0].id, startedAt: diasAtras(1, 6), endedAt: diasAtras(1, 14), positionsCount: 498 },
+    { vehicleId: vehiculosRuta1[2].id, startedAt: diasAtras(1, 7), endedAt: diasAtras(1, 16), positionsCount: 621 },
+    { vehicleId: vehiculosRuta2[1].id, startedAt: diasAtras(1, 8), endedAt: diasAtras(1, 13), positionsCount: 295 },
     // Hace 2 días
-    {
-      vehicleId: vehiculosRuta1[1].id,
-      startedAt: diasAtras(2, 6),
-      endedAt: diasAtras(2, 15),
-      positionsCount: 543,
-    },
-    {
-      vehicleId: vehiculosRuta1[2].id,
-      startedAt: diasAtras(2, 7),
-      endedAt: diasAtras(2, 14),
-      positionsCount: 478,
-    },
-    {
-      vehicleId: vehiculosRuta2[0].id,
-      startedAt: diasAtras(2, 9),
-      endedAt: diasAtras(2, 17),
-      positionsCount: 412,
-    },
+    { vehicleId: vehiculosRuta1[1].id, startedAt: diasAtras(2, 6), endedAt: diasAtras(2, 15), positionsCount: 543 },
+    { vehicleId: vehiculosRuta1[2].id, startedAt: diasAtras(2, 7), endedAt: diasAtras(2, 14), positionsCount: 478 },
+    { vehicleId: vehiculosRuta2[0].id, startedAt: diasAtras(2, 9), endedAt: diasAtras(2, 17), positionsCount: 412 },
     // Hace 3 días
-    {
-      vehicleId: vehiculosRuta1[0].id,
-      startedAt: diasAtras(3, 6),
-      endedAt: diasAtras(3, 14),
-      positionsCount: 502,
-    },
-    {
-      vehicleId: vehiculosRuta2[1].id,
-      startedAt: diasAtras(3, 7),
-      endedAt: diasAtras(3, 16),
-      positionsCount: 589,
-    },
+    { vehicleId: vehiculosRuta1[0].id, startedAt: diasAtras(3, 6), endedAt: diasAtras(3, 14), positionsCount: 502 },
+    { vehicleId: vehiculosRuta2[1].id, startedAt: diasAtras(3, 7), endedAt: diasAtras(3, 16), positionsCount: 589 },
   ];
 
   await db.insert(shiftsTable).values(turnos);
@@ -190,7 +149,8 @@ async function seed() {
   await pool.end();
   console.log("Seed completado.");
   console.log(`  Rutas: 2`);
-  console.log(`  Paradas: ${paradasRuta1.length + paradasRuta2.length}`);
+  console.log(`  Paradas Ruta 1: ${paradasRuta1.length} (San Juan Zitlaltepec → Metro La Raza)`);
+  console.log(`  Paradas Ruta 2: ${paradasRuta2.length}`);
   console.log(`  Vehículos: ${vehiculosRuta1.length + vehiculosRuta2.length}`);
   console.log(`  Turnos: ${turnos.length} (1 activo)`);
 }

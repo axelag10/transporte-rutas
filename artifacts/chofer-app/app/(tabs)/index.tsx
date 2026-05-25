@@ -41,6 +41,7 @@ export default function TurnoScreen() {
 
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
   const [isTracking, setIsTracking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [currentShiftId, setCurrentShiftId] = useState<number | null>(null);
   const [currentCoords, setCurrentCoords] = useState<GeoCoords | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -52,22 +53,27 @@ export default function TurnoScreen() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const selectedVehicle = vehicles?.find((v) => v.id === selectedVehicleId);
 
+  // Pulse animation: active only when tracking AND not paused
   useEffect(() => {
-    if (isTracking) {
-      Animated.loop(
+    if (isTracking && !isPaused) {
+      const loop = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 1.35, duration: 800, useNativeDriver: true }),
           Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
         ])
-      ).start();
+      );
+      pulseLoopRef.current = loop;
+      loop.start();
     } else {
+      pulseLoopRef.current?.stop();
       pulseAnim.stopAnimation();
       pulseAnim.setValue(1);
     }
-  }, [isTracking, pulseAnim]);
+  }, [isTracking, isPaused, pulseAnim]);
 
   const formatElapsed = (start: Date) => {
     const diff = Math.floor((Date.now() - start.getTime()) / 1000);
@@ -106,6 +112,34 @@ export default function TurnoScreen() {
     });
   }, []);
 
+  const startGpsInterval = useCallback(
+    (vehicleId: number) => {
+      const tick = async () => {
+        try {
+          const coords = await getPosition();
+          setCurrentCoords(coords);
+          sendPosition(
+            {
+              id: vehicleId,
+              data: {
+                lat: coords.latitude,
+                lng: coords.longitude,
+                speed: coords.speed ?? undefined,
+                heading: coords.heading ?? undefined,
+              },
+            },
+            { onSuccess: () => setLastSync(new Date()) }
+          );
+        } catch {
+          // silently skip failed reads
+        }
+      };
+      tick();
+      intervalRef.current = setInterval(tick, GPS_INTERVAL_MS);
+    },
+    [getPosition, sendPosition]
+  );
+
   const startTracking = useCallback(async () => {
     if (!selectedVehicleId) return;
 
@@ -122,49 +156,42 @@ export default function TurnoScreen() {
 
     setPermissionError(null);
 
-    let shiftId: number | null = null;
     try {
       const shift = await createShift({ data: { vehicleId: selectedVehicleId } });
-      shiftId = shift.id;
       setCurrentShiftId(shift.id);
     } catch {
       // continue even if shift record fails
     }
 
-    const now = new Date();
-    shiftStartRef.current = now;
+    shiftStartRef.current = new Date();
     setIsTracking(true);
+    setIsPaused(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    const tick = async () => {
-      try {
-        const coords = await getPosition();
-        setCurrentCoords(coords);
-        sendPosition(
-          {
-            id: selectedVehicleId,
-            data: {
-              lat: coords.latitude,
-              lng: coords.longitude,
-              speed: coords.speed ?? undefined,
-              heading: coords.heading ?? undefined,
-            },
-          },
-          { onSuccess: () => setLastSync(new Date()) }
-        );
-      } catch {
-        // silently skip failed reads
-      }
-    };
+    startGpsInterval(selectedVehicleId);
 
-    tick();
-    intervalRef.current = setInterval(tick, GPS_INTERVAL_MS);
     elapsedRef.current = setInterval(() => {
       if (shiftStartRef.current) {
         setElapsed(formatElapsed(shiftStartRef.current));
       }
     }, 1000);
-  }, [selectedVehicleId, getPosition, sendPosition, createShift]);
+  }, [selectedVehicleId, startGpsInterval, createShift]);
+
+  const pauseTracking = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIsPaused(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
+
+  const resumeTracking = useCallback(() => {
+    if (!selectedVehicleId) return;
+    setIsPaused(false);
+    startGpsInterval(selectedVehicleId);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [selectedVehicleId, startGpsInterval]);
 
   const stopTracking = useCallback(async () => {
     setStopping(true);
@@ -182,6 +209,7 @@ export default function TurnoScreen() {
     }
 
     setIsTracking(false);
+    setIsPaused(false);
     setCurrentCoords(null);
     setLastSync(null);
     setCurrentShiftId(null);
@@ -200,6 +228,12 @@ export default function TurnoScreen() {
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 84 : insets.bottom + 60;
+
+  // Dynamic colors based on pause state
+  const statusColor = isPaused ? "#f59e0b" : colors.accent;
+  const statusRingColor = isPaused ? "#f59e0b33" : colors.accent + "33";
+  const statusLabel = isPaused ? "En descanso" : "En ruta";
+  const statusIcon = isPaused ? "pause-circle" : "radio";
 
   const s = StyleSheet.create({
     root: {
@@ -307,20 +341,17 @@ export default function TurnoScreen() {
       width: 80,
       height: 80,
       borderRadius: 40,
-      backgroundColor: colors.accent + "33",
     },
     statusDot: {
       width: 52,
       height: 52,
       borderRadius: 26,
-      backgroundColor: colors.accent,
       alignItems: "center",
       justifyContent: "center",
     },
     statusLabel: {
       fontSize: 12,
       fontWeight: "600",
-      color: colors.accent,
       letterSpacing: 2,
       textTransform: "uppercase",
       marginBottom: 4,
@@ -378,6 +409,7 @@ export default function TurnoScreen() {
       alignItems: "center",
       gap: 6,
       marginTop: 4,
+      marginBottom: 8,
     },
     syncDot: {
       width: 7,
@@ -404,6 +436,21 @@ export default function TurnoScreen() {
       fontSize: 16,
       fontWeight: "700",
       fontFamily: "Inter_700Bold",
+    },
+    pauseBanner: {
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: "#f59e0b22",
+    },
+    pauseBannerText: {
+      fontSize: 13,
+      color: "#f59e0b",
+      fontFamily: "Inter_500Medium",
+      flex: 1,
     },
     errorBox: {
       backgroundColor: colors.destructive + "22",
@@ -455,18 +502,32 @@ export default function TurnoScreen() {
 
         <View style={s.dashboardCard}>
           <View style={s.pulseWrapper}>
-            <Animated.View style={[s.pulseRing, { transform: [{ scale: pulseAnim }] }]} />
-            <View style={s.statusDot}>
-              <Feather name="radio" size={24} color={colors.accentForeground} />
+            <Animated.View
+              style={[
+                s.pulseRing,
+                { backgroundColor: statusRingColor, transform: [{ scale: pulseAnim }] },
+              ]}
+            />
+            <View style={[s.statusDot, { backgroundColor: statusColor }]}>
+              <Feather name={statusIcon as "radio"} size={24} color="#0a1628" />
             </View>
           </View>
-          <Text style={s.statusLabel}>En ruta</Text>
+          <Text style={[s.statusLabel, { color: statusColor }]}>{statusLabel}</Text>
           <Text style={s.vehicleNameBig}>{selectedVehicle.plateNumber}</Text>
           <Text style={s.elapsedTime}>{elapsed}</Text>
           <Text style={s.elapsedSub}>Tiempo de turno</Text>
         </View>
 
-        {currentCoords && (
+        {isPaused && (
+          <View style={s.pauseBanner}>
+            <Feather name="clock" size={16} color="#f59e0b" />
+            <Text style={s.pauseBannerText}>
+              GPS en pausa. El turno sigue activo — toca Reanudar cuando termines tu descanso.
+            </Text>
+          </View>
+        )}
+
+        {!isPaused && currentCoords && (
           <View style={s.gpsRow}>
             <View style={s.gpsStat}>
               <Text style={s.gpsLabel}>Latitud</Text>
@@ -489,22 +550,48 @@ export default function TurnoScreen() {
           </View>
         )}
 
-        <View style={s.syncRow}>
-          <View
-            style={[
-              s.syncDot,
-              { backgroundColor: lastSync ? colors.accent : colors.mutedForeground },
-            ]}
-          />
-          <Text style={s.syncText}>
-            {lastSync
-              ? `Última sync: ${lastSync.toLocaleTimeString("es-MX")}`
-              : "Esperando primera sincronización..."}
-          </Text>
-        </View>
+        {!isPaused && (
+          <View style={s.syncRow}>
+            <View
+              style={[
+                s.syncDot,
+                { backgroundColor: lastSync ? colors.accent : colors.mutedForeground },
+              ]}
+            />
+            <Text style={s.syncText}>
+              {lastSync
+                ? `Ultima sync: ${lastSync.toLocaleTimeString("es-MX")}`
+                : "Esperando primera sincronizacion..."}
+            </Text>
+          </View>
+        )}
 
         <View style={{ flex: 1 }} />
 
+        {/* Pause / Resume */}
+        <Pressable
+          style={({ pressed }) => [
+            s.actionBtn,
+            {
+              backgroundColor: isPaused ? colors.accent : colors.muted,
+              opacity: pressed ? 0.85 : 1,
+              borderWidth: isPaused ? 0 : 1,
+              borderColor: colors.border,
+            },
+          ]}
+          onPress={isPaused ? resumeTracking : pauseTracking}
+        >
+          <Text
+            style={[
+              s.actionBtnText,
+              { color: isPaused ? colors.accentForeground : colors.foreground },
+            ]}
+          >
+            {isPaused ? "Reanudar turno" : "Pausar (descanso)"}
+          </Text>
+        </Pressable>
+
+        {/* End shift */}
         <Pressable
           style={({ pressed }) => [
             s.actionBtn,
