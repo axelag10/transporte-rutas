@@ -2,7 +2,6 @@ import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import session from "express-session";
-import ConnectPgSimple from "connect-pg-simple";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -32,15 +31,8 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PgStore = ConnectPgSimple(session);
-
 app.use(
   session({
-    store: new PgStore({
-      conString: process.env.DATABASE_URL,
-      tableName: "admin_sessions",
-      createTableIfMissing: true,
-    }),
     secret: process.env.SESSION_SECRET ?? "transbus-dev-secret",
     name: "transbus.sid",
     resave: false,
@@ -48,8 +40,8 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 8 * 60 * 60 * 1000, // 8 horas
+      secure: false,
+      maxAge: 8 * 60 * 60 * 1000,
     },
   }),
 );
