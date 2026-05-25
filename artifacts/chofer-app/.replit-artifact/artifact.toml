@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/chofer/"
+title = "TransBus Chofer"
+version = "1.0.0"
+id = "artifacts/chofer-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/chofer/" ]
+localPort = 22659
+
+[services.development]
+run = "pnpm --filter @workspace/chofer-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/chofer-app", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/chofer-app", "run", "serve" ]
+
+[services.env]
+PORT = "22659"
+BASE_PATH = "/chofer/"
