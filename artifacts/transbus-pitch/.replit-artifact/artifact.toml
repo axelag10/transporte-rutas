@@ -1,0 +1,31 @@
+kind = "slides"
+previewPath = "/transbus-pitch/"
+title = "TransBus - Pitch Deck"
+version = "1.0.0"
+id = "artifacts/transbus-pitch"
+router = "path"
+
+[[integratedSkills]]
+name = "slides"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/transbus-pitch/" ]
+localPort = 22124
+
+[services.development]
+run = "pnpm --filter @workspace/transbus-pitch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/transbus-pitch", "run", "build" ]
+publicDir = "artifacts/transbus-pitch/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22124"
+BASE_PATH = "/transbus-pitch/"

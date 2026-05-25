@@ -1,119 +1,7 @@
 import { useParams, Link } from "wouter";
 import { useGetRoute, useGetRouteLive, useGetEta } from "@workspace/api-client-react";
 import type { StopEta, VehicleLive, Stop } from "@workspace/api-client-react";
-
-function SvgMap({
-  stops,
-  vehicles,
-  color,
-}: {
-  stops: Stop[];
-  vehicles: VehicleLive[];
-  color: string;
-}) {
-  if (stops.length === 0) return (
-    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-      No hay paradas registradas para esta ruta.
-    </div>
-  );
-
-  const allLats = [...stops.map(s => s.lat), ...vehicles.map(v => v.lat)];
-  const allLngs = [...stops.map(s => s.lng), ...vehicles.map(v => v.lng)];
-  const minLat = Math.min(...allLats);
-  const maxLat = Math.max(...allLats);
-  const minLng = Math.min(...allLngs);
-  const maxLng = Math.max(...allLngs);
-
-  const PAD = 0.001;
-  const W = 540;
-  const H = 360;
-
-  function toX(lng: number) {
-    return PAD + ((lng - minLng) / (maxLng - minLng || 1)) * (W - 2 * PAD * W);
-  }
-  function toY(lat: number) {
-    return H - PAD * H - ((lat - minLat) / (maxLat - minLat || 1)) * (H - 2 * PAD * H);
-  }
-
-  const pathD = stops
-    .slice()
-    .sort((a, b) => a.order - b.order)
-    .map((s, i) => `${i === 0 ? 'M' : 'L'} ${toX(s.lng)} ${toY(s.lat)}`)
-    .join(' ');
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" style={{ background: 'transparent' }}>
-      <path
-        d={pathD}
-        fill="none"
-        stroke={color}
-        strokeWidth="2.5"
-        strokeDasharray="6 4"
-        opacity="0.5"
-      />
-      {stops.slice().sort((a, b) => a.order - b.order).map((stop, i) => (
-        <g key={stop.id}>
-          <circle
-            cx={toX(stop.lng)}
-            cy={toY(stop.lat)}
-            r="8"
-            fill="hsl(215 25% 12%)"
-            stroke={color}
-            strokeWidth="2"
-          />
-          <text
-            x={toX(stop.lng)}
-            y={toY(stop.lat) + 4}
-            textAnchor="middle"
-            fontSize="8"
-            fontWeight="bold"
-            fill={color}
-          >
-            {i + 1}
-          </text>
-          <text
-            x={toX(stop.lng) + 12}
-            y={toY(stop.lat) + 4}
-            fontSize="9"
-            fill="rgba(255,255,255,0.7)"
-          >
-            {stop.name.length > 18 ? stop.name.slice(0, 18) + '…' : stop.name}
-          </text>
-        </g>
-      ))}
-      {vehicles.map(v => (
-        <g key={v.vehicleId}>
-          <circle
-            cx={toX(v.lng)}
-            cy={toY(v.lat)}
-            r="12"
-            fill={color}
-            opacity="0.9"
-          />
-          <circle
-            cx={toX(v.lng)}
-            cy={toY(v.lat)}
-            r="16"
-            fill="none"
-            stroke={color}
-            strokeWidth="2"
-            opacity="0.3"
-          />
-          <text
-            x={toX(v.lng)}
-            y={toY(v.lat) + 4}
-            textAnchor="middle"
-            fontSize="9"
-            fontWeight="bold"
-            fill="hsl(215 28% 9%)"
-          >
-            B
-          </text>
-        </g>
-      ))}
-    </svg>
-  );
-}
+import { MapaLeaflet } from "@/components/MapaLeaflet";
 
 function EtaList({ vehicleId, routeColor }: { vehicleId: number; routeColor: string }) {
   const { data: eta, isLoading } = useGetEta(vehicleId, {
@@ -226,8 +114,8 @@ export default function RouteMap() {
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Mapa en tiempo real</span>
               <span className="text-xs text-muted-foreground">Actualiza cada 5 seg</span>
             </div>
-            <div className="p-4" style={{ height: 300 }}>
-              <SvgMap stops={stops} vehicles={vehicles} color={route.color} />
+            <div style={{ height: 340 }}>
+              <MapaLeaflet stops={stops} vehicles={vehicles} color={route.color} />
             </div>
           </div>
 
