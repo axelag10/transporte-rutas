@@ -29,15 +29,18 @@ import type {
   ListOfflineVehiclesParams,
   ListShiftsParams,
   OfflineAlert,
+  PinResult,
   PositionAck,
   Route,
   RouteDetail,
   RouteLive,
   ShiftDetail,
+  ShiftPositions,
   ShiftRecord,
   Stop,
   UpdatePosition,
-  Vehicle
+  Vehicle,
+  VerifyPin
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -651,6 +654,78 @@ export const useCreateVehicle = <TError = ErrorType<unknown>,
       return useMutation(getCreateVehicleMutationOptions(options));
     }
 
+export const getVerifyPinUrl = (id: number,) => {
+
+
+
+
+  return `/api/vehicles/${id}/verify-pin`
+}
+
+/**
+ * @summary Verifica el PIN de un vehículo antes de iniciar turno
+ */
+export const verifyPin = async (id: number,
+    verifyPin: VerifyPin, options?: RequestInit): Promise<PinResult> => {
+
+  return customFetch<PinResult>(getVerifyPinUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      verifyPin,)
+  }
+);}
+
+
+
+
+export const getVerifyPinMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyPin>>, TError,{id: number;data: BodyType<VerifyPin>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyPin>>, TError,{id: number;data: BodyType<VerifyPin>}, TContext> => {
+
+const mutationKey = ['verifyPin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyPin>>, {id: number;data: BodyType<VerifyPin>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  verifyPin(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyPinMutationResult = NonNullable<Awaited<ReturnType<typeof verifyPin>>>
+    export type VerifyPinMutationBody = BodyType<VerifyPin>
+    export type VerifyPinMutationError = ErrorType<void>
+
+    /**
+ * @summary Verifica el PIN de un vehículo antes de iniciar turno
+ */
+export const useVerifyPin = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyPin>>, TError,{id: number;data: BodyType<VerifyPin>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof verifyPin>>,
+        TError,
+        {id: number;data: BodyType<VerifyPin>},
+        TContext
+      > => {
+      return useMutation(getVerifyPinMutationOptions(options));
+    }
+
 export const getUpdatePositionUrl = (id: number,) => {
 
 
@@ -1108,6 +1183,83 @@ export const useEndShift = <TError = ErrorType<void>,
       > => {
       return useMutation(getEndShiftMutationOptions(options));
     }
+
+export const getGetShiftPositionsUrl = (id: number,) => {
+
+
+
+
+  return `/api/shifts/${id}/positions`
+}
+
+/**
+ * @summary Historial de posiciones GPS de un turno
+ */
+export const getShiftPositions = async (id: number, options?: RequestInit): Promise<ShiftPositions> => {
+
+  return customFetch<ShiftPositions>(getGetShiftPositionsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetShiftPositionsQueryKey = (id: number,) => {
+    return [
+    `/api/shifts/${id}/positions`
+    ] as const;
+    }
+
+
+export const getGetShiftPositionsQueryOptions = <TData = Awaited<ReturnType<typeof getShiftPositions>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getShiftPositions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetShiftPositionsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getShiftPositions>>> = ({ signal }) => getShiftPositions(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getShiftPositions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetShiftPositionsQueryResult = NonNullable<Awaited<ReturnType<typeof getShiftPositions>>>
+export type GetShiftPositionsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Historial de posiciones GPS de un turno
+ */
+
+export function useGetShiftPositions<TData = Awaited<ReturnType<typeof getShiftPositions>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getShiftPositions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetShiftPositionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetRouteLiveUrl = (id: number,) => {
 

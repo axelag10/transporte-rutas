@@ -26,6 +26,29 @@ router.post("/vehicles", async (req, res) => {
   res.status(201).json(vehicle);
 });
 
+router.post("/vehicles/:id/verify-pin", async (req, res) => {
+  const vehicleId = Number(req.params.id);
+  const { pin } = req.body as { pin?: string };
+
+  if (!pin || typeof pin !== "string") {
+    res.status(400).json({ error: "PIN requerido" });
+    return;
+  }
+
+  const [vehicle] = await db.select().from(vehiclesTable).where(eq(vehiclesTable.id, vehicleId));
+  if (!vehicle) {
+    res.status(404).json({ error: "Vehículo no encontrado" });
+    return;
+  }
+
+  if (vehicle.pin !== pin) {
+    res.status(401).json({ ok: false, vehicleId });
+    return;
+  }
+
+  res.json({ ok: true, vehicleId });
+});
+
 router.post("/vehicles/:id/position", async (req, res) => {
   const vehicleId = Number(req.params.id);
   const parsed = insertPositionSchema.safeParse({ ...req.body, vehicleId });

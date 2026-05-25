@@ -127,7 +127,25 @@ export const ListVehiclesResponse = zod.array(ListVehiclesResponseItem)
 export const CreateVehicleBody = zod.object({
   "routeId": zod.number(),
   "driverName": zod.string(),
-  "plateNumber": zod.string()
+  "plateNumber": zod.string(),
+  "pin": zod.string().describe('PIN de 4 dígitos para autenticar al chofer')
+})
+
+
+/**
+ * @summary Verifica el PIN de un vehículo antes de iniciar turno
+ */
+export const VerifyPinParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const VerifyPinBody = zod.object({
+  "pin": zod.string()
+})
+
+export const VerifyPinResponse = zod.object({
+  "ok": zod.boolean(),
+  "vehicleId": zod.number()
 })
 
 
@@ -236,6 +254,30 @@ export const EndShiftResponse = zod.object({
   "startedAt": zod.coerce.date(),
   "endedAt": zod.coerce.date().nullish(),
   "positionsCount": zod.number()
+})
+
+
+/**
+ * @summary Historial de posiciones GPS de un turno
+ */
+export const GetShiftPositionsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetShiftPositionsResponse = zod.object({
+  "shiftId": zod.number(),
+  "vehicleId": zod.number(),
+  "plateNumber": zod.string(),
+  "driverName": zod.string(),
+  "startedAt": zod.coerce.date(),
+  "endedAt": zod.coerce.date().nullish(),
+  "positions": zod.array(zod.object({
+  "lat": zod.number(),
+  "lng": zod.number(),
+  "speed": zod.number().nullish(),
+  "heading": zod.number().nullish(),
+  "recordedAt": zod.coerce.date()
+}))
 })
 
 

@@ -76,4 +76,57 @@ router.get("/shifts", async (req, res) => {
   res.json(rows);
 });
 
+router.get("/shifts/:id/positions", async (req, res) => {
+  const id = Number(req.params.id);
+
+  const [shift] = await db
+    .select({
+      id: shiftsTable.id,
+      vehicleId: shiftsTable.vehicleId,
+      startedAt: shiftsTable.startedAt,
+      endedAt: shiftsTable.endedAt,
+      plateNumber: vehiclesTable.plateNumber,
+      driverName: vehiclesTable.driverName,
+    })
+    .from(shiftsTable)
+    .innerJoin(vehiclesTable, eq(shiftsTable.vehicleId, vehiclesTable.id))
+    .where(eq(shiftsTable.id, id));
+
+  if (!shift) {
+    res.status(404).json({ error: "Turno no encontrado" });
+    return;
+  }
+
+  const endBound = shift.endedAt ?? new Date();
+
+  const positions = await db
+    .select({
+      lat: positionsTable.lat,
+      lng: positionsTable.lng,
+      speed: positionsTable.speed,
+      heading: positionsTable.heading,
+      recordedAt: positionsTable.recordedAt,
+    })
+    .from(positionsTable)
+    .where(
+      and(
+        eq(positionsTable.vehicleId, shift.vehicleId),
+        gte(positionsTable.recordedAt, shift.startedAt),
+        lte(positionsTable.recordedAt, endBound),
+      ),
+    )
+    .orderBy(positionsTable.recordedAt)
+    .limit(5000);
+
+  res.json({
+    shiftId: shift.id,
+    vehicleId: shift.vehicleId,
+    plateNumber: shift.plateNumber,
+    driverName: shift.driverName,
+    startedAt: shift.startedAt,
+    endedAt: shift.endedAt,
+    positions,
+  });
+});
+
 export default router;

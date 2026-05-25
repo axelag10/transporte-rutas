@@ -164,6 +164,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/Vehicle"
 
+  /vehicles/{id}/verify-pin:
+    post:
+      operationId: verifyPin
+      tags: [vehicles]
+      summary: Verifica el PIN de un vehículo antes de iniciar turno
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyPin"
+      responses:
+        "200":
+          description: PIN correcto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PinResult"
+        "401":
+          description: PIN incorrecto
+
   /vehicles/{id}/position:
     post:
       operationId: updatePosition
@@ -289,6 +316,27 @@ paths:
         "404":
           description: Turno no encontrado
 
+  /shifts/{id}/positions:
+    get:
+      operationId: getShiftPositions
+      tags: [shifts]
+      summary: Historial de posiciones GPS de un turno
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de posiciones del turno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShiftPositions"
+        "404":
+          description: Turno no encontrado
+
   /routes/{id}/live:
     get:
       operationId: getRouteLive
@@ -408,7 +456,26 @@ components:
           type: string
         plateNumber:
           type: string
-      required: [routeId, driverName, plateNumber]
+        pin:
+          type: string
+          description: PIN de 4 dígitos para autenticar al chofer
+      required: [routeId, driverName, plateNumber, pin]
+
+    VerifyPin:
+      type: object
+      properties:
+        pin:
+          type: string
+      required: [pin]
+
+    PinResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        vehicleId:
+          type: integer
+      required: [ok, vehicleId]
 
     UpdatePosition:
       type: object
@@ -602,3 +669,45 @@ components:
         driverName:
           type: string
       required: [id, vehicleId, startedAt, positionsCount, plateNumber, driverName]
+
+    PositionPoint:
+      type: object
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+        speed:
+          type: number
+          nullable: true
+        heading:
+          type: number
+          nullable: true
+        recordedAt:
+          type: string
+          format: date-time
+      required: [lat, lng, recordedAt]
+
+    ShiftPositions:
+      type: object
+      properties:
+        shiftId:
+          type: integer
+        vehicleId:
+          type: integer
+        plateNumber:
+          type: string
+        driverName:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        positions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PositionPoint"
+      required: [shiftId, vehicleId, plateNumber, driverName, startedAt, positions]

@@ -84,17 +84,17 @@ async function seed() {
   const vehiculosRuta1 = await db
     .insert(vehiclesTable)
     .values([
-      { routeId: rutaZumpango.id, driverName: "Miguel Ángel Torres", plateNumber: "MEX-1234", active: true },
-      { routeId: rutaZumpango.id, driverName: "Jesús Hernández Reyes", plateNumber: "MEX-5678", active: true },
-      { routeId: rutaZumpango.id, driverName: "Roberto Sánchez Cruz", plateNumber: "MEX-9012", active: true },
+      { routeId: rutaZumpango.id, driverName: "Miguel Ángel Torres",    plateNumber: "MEX-1234", pin: "1234", active: true },
+      { routeId: rutaZumpango.id, driverName: "Jesús Hernández Reyes",  plateNumber: "MEX-5678", pin: "5678", active: true },
+      { routeId: rutaZumpango.id, driverName: "Roberto Sánchez Cruz",   plateNumber: "MEX-9012", pin: "9012", active: true },
     ])
     .returning();
 
   const vehiculosRuta2 = await db
     .insert(vehiclesTable)
     .values([
-      { routeId: rutaLocal.id, driverName: "Carlos Mendoza Vega", plateNumber: "MEX-3456", active: true },
-      { routeId: rutaLocal.id, driverName: "Antonio Ramírez Díaz", plateNumber: "MEX-7890", active: true },
+      { routeId: rutaLocal.id, driverName: "Carlos Mendoza Vega",  plateNumber: "MEX-3456", pin: "3456", active: true },
+      { routeId: rutaLocal.id, driverName: "Antonio Ramírez Díaz", plateNumber: "MEX-7890", pin: "7890", active: true },
     ])
     .returning();
 

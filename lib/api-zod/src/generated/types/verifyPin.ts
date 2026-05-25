@@ -6,10 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateVehicle {
-  routeId: number;
-  driverName: string;
-  plateNumber: string;
-  /** PIN de 4 dígitos para autenticar al chofer */
+export interface VerifyPin {
   pin: string;
 }

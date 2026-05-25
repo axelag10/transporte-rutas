@@ -8,6 +8,7 @@ export const vehiclesTable = pgTable("vehicles", {
   routeId: integer("route_id").notNull().references(() => routesTable.id),
   driverName: text("driver_name").notNull(),
   plateNumber: text("plate_number").notNull(),
+  pin: text("pin").notNull().default("0000"),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

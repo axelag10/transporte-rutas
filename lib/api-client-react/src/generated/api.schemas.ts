@@ -54,6 +54,17 @@ export interface CreateVehicle {
   routeId: number;
   driverName: string;
   plateNumber: string;
+  /** PIN de 4 dígitos para autenticar al chofer */
+  pin: string;
+}
+
+export interface VerifyPin {
+  pin: string;
+}
+
+export interface PinResult {
+  ok: boolean;
+  vehicleId: number;
 }
 
 export interface UpdatePosition {
@@ -142,6 +153,24 @@ export interface ShiftDetail {
   positionsCount: number;
   plateNumber: string;
   driverName: string;
+}
+
+export interface PositionPoint {
+  lat: number;
+  lng: number;
+  speed?: number | null;
+  heading?: number | null;
+  recordedAt: string;
+}
+
+export interface ShiftPositions {
+  shiftId: number;
+  vehicleId: number;
+  plateNumber: string;
+  driverName: string;
+  startedAt: string;
+  endedAt?: string | null;
+  positions: PositionPoint[];
 }
 
 export type ListOfflineVehiclesParams = {
