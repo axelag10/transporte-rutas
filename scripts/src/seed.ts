@@ -49,17 +49,15 @@ async function seed() {
   // ─── Paradas Ruta 1: San Juan Zitlaltepec → Metro La Raza ─────────────────
   // Coordenadas reales del trayecto
   const paradasRuta1 = [
-    { name: "San Juan Zitlaltepec",                  lat: 19.8102214, lng: -99.1467697, order: 1  },
-    { name: "Mercado Zumpango / Jorge Jiménez Cantú", lat: 19.7977500, lng: -99.1044400, order: 2  },
-    { name: "San Pedro de la Laguna",                 lat: 19.7792098, lng: -99.1151801, order: 3  },
-    { name: "Circuito Mexiquense Bicentenario",       lat: 19.7820000, lng: -99.0460000, order: 4  },
-    { name: "Los Héroes Ecatepec",                   lat: 19.6188909, lng: -99.0296309, order: 5  },
-    { name: "Ecatepec / Av. Central",                lat: 19.5981063, lng: -99.0398235, order: 6  },
-    { name: "Carr. México - Pachuca",                 lat: 19.5440000, lng: -99.0810000, order: 7  },
-    { name: "Av. de los Cien Metros",                 lat: 19.4953580, lng: -99.1194680, order: 8  },
-    { name: "Metro Indios Verdes",                    lat: 19.4850750, lng: -99.1254861, order: 9  },
-    { name: "Insurgentes Norte",                      lat: 19.4769100, lng: -99.1321710, order: 10 },
-    { name: "Metro La Raza",                          lat: 19.4682950, lng: -99.1401861, order: 11 },
+    { name: "San Juan Zitlaltepec",                  lat: 19.8102214, lng: -99.1467697, order: 1 },
+    { name: "Mercado Zumpango / Jorge Jiménez Cantú", lat: 19.7977500, lng: -99.1044400, order: 2 },
+    { name: "San Pedro de la Laguna",                 lat: 19.7792098, lng: -99.1151801, order: 3 },
+    { name: "Circuito Mexiquense Bicentenario",       lat: 19.7820000, lng: -99.0460000, order: 4 },
+    { name: "Carr. México - Pachuca",                 lat: 19.5440000, lng: -99.0810000, order: 5 },
+    { name: "Metro Indios Verdes",                    lat: 19.4850750, lng: -99.1254861, order: 6 },
+    { name: "Metro 18 de Marzo",                      lat: 19.4789000, lng: -99.1305000, order: 7 },
+    { name: "Metro Potrero",                          lat: 19.4736000, lng: -99.1352000, order: 8 },
+    { name: "Metro La Raza",                          lat: 19.4682950, lng: -99.1401861, order: 9 },
   ];
 
   await db.insert(stopsTable).values(
