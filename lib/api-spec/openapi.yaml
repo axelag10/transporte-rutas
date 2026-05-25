@@ -3,20 +3,28 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TransBus - Sistema de rastreo de transporte público
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: routes
+    description: Rutas de transporte
+  - name: stops
+    description: Paradas de una ruta
+  - name: vehicles
+    description: Vehículos / choferes
+  - name: positions
+    description: Posiciones GPS en tiempo real
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,199 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /routes:
+    get:
+      operationId: listRoutes
+      tags: [routes]
+      summary: Lista todas las rutas
+      responses:
+        "200":
+          description: Lista de rutas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Route"
+    post:
+      operationId: createRoute
+      tags: [routes]
+      summary: Crea una nueva ruta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoute"
+      responses:
+        "201":
+          description: Ruta creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+
+  /routes/{id}:
+    get:
+      operationId: getRoute
+      tags: [routes]
+      summary: Obtiene una ruta con sus paradas y vehículos activos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Detalle de la ruta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteDetail"
+        "404":
+          description: No encontrada
+
+  /routes/{id}/stops:
+    get:
+      operationId: listStops
+      tags: [stops]
+      summary: Lista las paradas de una ruta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de paradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Stop"
+    post:
+      operationId: createStop
+      tags: [stops]
+      summary: Agrega una parada a la ruta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStop"
+      responses:
+        "201":
+          description: Parada creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stop"
+
+  /vehicles:
+    get:
+      operationId: listVehicles
+      tags: [vehicles]
+      summary: Lista todos los vehículos
+      responses:
+        "200":
+          description: Lista de vehículos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Vehicle"
+    post:
+      operationId: createVehicle
+      tags: [vehicles]
+      summary: Registra un nuevo vehículo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVehicle"
+      responses:
+        "201":
+          description: Vehículo creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicle"
+
+  /vehicles/{id}/position:
+    post:
+      operationId: updatePosition
+      tags: [positions]
+      summary: Actualiza la posición GPS de un vehículo (app del chofer)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePosition"
+      responses:
+        "200":
+          description: Posición registrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PositionAck"
+
+  /vehicles/{id}/eta:
+    get:
+      operationId: getEta
+      tags: [positions]
+      summary: Obtiene ETA del vehículo a cada parada de su ruta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: ETAs por parada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EtaResponse"
+
+  /routes/{id}/live:
+    get:
+      operationId: getRouteLive
+      tags: [positions]
+      summary: Posiciones actuales de todos los vehículos en una ruta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Posiciones en tiempo real
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteLive"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +232,218 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    Route:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        color:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, color, active, createdAt]
+
+    CreateRoute:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        color:
+          type: string
+      required: [name]
+
+    Stop:
+      type: object
+      properties:
+        id:
+          type: integer
+        routeId:
+          type: integer
+        name:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        order:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, routeId, name, lat, lng, order, createdAt]
+
+    CreateStop:
+      type: object
+      properties:
+        name:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        order:
+          type: integer
+      required: [name, lat, lng, order]
+
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+        routeId:
+          type: integer
+        driverName:
+          type: string
+        plateNumber:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, routeId, driverName, plateNumber, active, createdAt]
+
+    CreateVehicle:
+      type: object
+      properties:
+        routeId:
+          type: integer
+        driverName:
+          type: string
+        plateNumber:
+          type: string
+      required: [routeId, driverName, plateNumber]
+
+    UpdatePosition:
+      type: object
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+        speed:
+          type: number
+          nullable: true
+        heading:
+          type: number
+          nullable: true
+      required: [lat, lng]
+
+    PositionAck:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        recordedAt:
+          type: string
+          format: date-time
+      required: [ok, recordedAt]
+
+    StopEta:
+      type: object
+      properties:
+        stopId:
+          type: integer
+        stopName:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        order:
+          type: integer
+        etaMinutes:
+          type: number
+          nullable: true
+        distanceKm:
+          type: number
+          nullable: true
+      required: [stopId, stopName, lat, lng, order]
+
+    EtaResponse:
+      type: object
+      properties:
+        vehicleId:
+          type: integer
+        currentLat:
+          type: number
+        currentLng:
+          type: number
+        stops:
+          type: array
+          items:
+            $ref: "#/components/schemas/StopEta"
+      required: [vehicleId, currentLat, currentLng, stops]
+
+    VehicleLive:
+      type: object
+      properties:
+        vehicleId:
+          type: integer
+        driverName:
+          type: string
+        plateNumber:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        speed:
+          type: number
+          nullable: true
+        heading:
+          type: number
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [vehicleId, driverName, plateNumber, lat, lng]
+
+    RouteDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        color:
+          type: string
+        active:
+          type: boolean
+        stops:
+          type: array
+          items:
+            $ref: "#/components/schemas/Stop"
+        vehicles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Vehicle"
+      required: [id, name, color, active, stops, vehicles]
+
+    RouteLive:
+      type: object
+      properties:
+        routeId:
+          type: integer
+        vehicles:
+          type: array
+          items:
+            $ref: "#/components/schemas/VehicleLive"
+      required: [routeId, vehicles]
