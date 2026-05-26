@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { shiftsTable, vehiclesTable, positionsTable } from "@workspace/db/schema";
-import { eq, desc, and, gte, lte, count } from "drizzle-orm";
+import { shiftsTable, vehiclesTable } from "@workspace/db/schema";
+import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
@@ -32,21 +32,11 @@ router.patch("/shifts/:id/end", async (req, res) => {
     return;
   }
 
-  const endedAt = new Date();
-  const [posCount] = await db
-    .select({ value: count() })
-    .from(positionsTable)
-    .where(
-      and(
-        eq(positionsTable.vehicleId, shift.vehicleId),
-        gte(positionsTable.recordedAt, shift.startedAt),
-        lte(positionsTable.recordedAt, endedAt),
-      ),
-    );
-
+  // Las estadisticas (positionsCount, avgSpeed, maxSpeed) se acumulan en tiempo real
+  // al recibir cada posicion GPS, solo falta marcar la hora de fin
   const [updated] = await db
     .update(shiftsTable)
-    .set({ endedAt, positionsCount: posCount?.value ?? 0 })
+    .set({ endedAt: new Date() })
     .where(eq(shiftsTable.id, id))
     .returning();
 
@@ -64,6 +54,8 @@ router.get("/shifts", async (req, res) => {
       startedAt: shiftsTable.startedAt,
       endedAt: shiftsTable.endedAt,
       positionsCount: shiftsTable.positionsCount,
+      avgSpeed: shiftsTable.avgSpeed,
+      maxSpeed: shiftsTable.maxSpeed,
       plateNumber: vehiclesTable.plateNumber,
       driverName: vehiclesTable.driverName,
     })
@@ -74,59 +66,6 @@ router.get("/shifts", async (req, res) => {
     .limit(100);
 
   res.json(rows);
-});
-
-router.get("/shifts/:id/positions", async (req, res) => {
-  const id = Number(req.params.id);
-
-  const [shift] = await db
-    .select({
-      id: shiftsTable.id,
-      vehicleId: shiftsTable.vehicleId,
-      startedAt: shiftsTable.startedAt,
-      endedAt: shiftsTable.endedAt,
-      plateNumber: vehiclesTable.plateNumber,
-      driverName: vehiclesTable.driverName,
-    })
-    .from(shiftsTable)
-    .innerJoin(vehiclesTable, eq(shiftsTable.vehicleId, vehiclesTable.id))
-    .where(eq(shiftsTable.id, id));
-
-  if (!shift) {
-    res.status(404).json({ error: "Turno no encontrado" });
-    return;
-  }
-
-  const endBound = shift.endedAt ?? new Date();
-
-  const positions = await db
-    .select({
-      lat: positionsTable.lat,
-      lng: positionsTable.lng,
-      speed: positionsTable.speed,
-      heading: positionsTable.heading,
-      recordedAt: positionsTable.recordedAt,
-    })
-    .from(positionsTable)
-    .where(
-      and(
-        eq(positionsTable.vehicleId, shift.vehicleId),
-        gte(positionsTable.recordedAt, shift.startedAt),
-        lte(positionsTable.recordedAt, endBound),
-      ),
-    )
-    .orderBy(positionsTable.recordedAt)
-    .limit(5000);
-
-  res.json({
-    shiftId: shift.id,
-    vehicleId: shift.vehicleId,
-    plateNumber: shift.plateNumber,
-    driverName: shift.driverName,
-    startedAt: shift.startedAt,
-    endedAt: shift.endedAt,
-    positions,
-  });
 });
 
 export default router;

@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { useListShifts, useListVehicles, useListRoutes, useGetShiftPositions } from "@workspace/api-client-react";
+import { useListShifts, useListVehicles, useListRoutes } from "@workspace/api-client-react";
 import { AlertasBanner } from "@/components/AlertasBanner";
 import { useState, useMemo } from "react";
 
@@ -9,6 +9,8 @@ interface ShiftDetail {
   startedAt: string;
   endedAt: string | null;
   positionsCount: number;
+  avgSpeed?: number | null;
+  maxSpeed?: number | null;
   plateNumber: string;
   driverName: string;
 }
@@ -61,88 +63,9 @@ function toLocalDateString(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-// ─── Historial de posiciones de un turno ─────────────────────────────────────
-function ShiftPositionsModal({ shiftId, onClose }: { shiftId: number; onClose: () => void }) {
-  const { data, isLoading } = useGetShiftPositions(shiftId);
-
-  const speedStats = useMemo(() => {
-    if (!data?.positions.length) return null;
-    const speeds = data.positions.filter((p) => p.speed != null).map((p) => (p.speed! * 3.6));
-    if (!speeds.length) return null;
-    const avg = speeds.reduce((a, b) => a + b, 0) / speeds.length;
-    const max = Math.max(...speeds);
-    return { avg: avg.toFixed(0), max: max.toFixed(0) };
-  }, [data]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
-      <div className="bg-card border border-border rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">
-              Historial GPS — {data?.plateNumber ?? "..."}
-            </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{data?.driverName}</p>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </button>
-        </div>
-
-        {data && (
-          <div className="grid grid-cols-3 gap-px bg-border mx-5 mt-4 rounded-xl overflow-hidden border border-border">
-            <div className="bg-card px-4 py-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Puntos GPS</p>
-              <p className="text-xl font-bold text-foreground">{data.positions.length}</p>
-            </div>
-            <div className="bg-card px-4 py-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Vel. prom.</p>
-              <p className="text-xl font-bold text-foreground">{speedStats ? `${speedStats.avg} km/h` : "—"}</p>
-            </div>
-            <div className="bg-card px-4 py-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Vel. max.</p>
-              <p className="text-xl font-bold text-foreground">{speedStats ? `${speedStats.max} km/h` : "—"}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto mx-5 my-4">
-          {isLoading && (
-            <div className="space-y-2 animate-pulse">
-              {[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted rounded-lg" />)}
-            </div>
-          )}
-          {!isLoading && data && data.positions.length === 0 && (
-            <p className="text-center text-muted-foreground text-sm py-8">
-              Este turno no tiene posiciones registradas.
-            </p>
-          )}
-          {!isLoading && data && data.positions.length > 0 && (
-            <div className="border border-border rounded-xl overflow-hidden">
-              <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-3 px-4 py-2 bg-muted/40 border-b border-border text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                <span>Lat</span>
-                <span>Lng</span>
-                <span>Velocidad</span>
-                <span>Hora</span>
-              </div>
-              <div className="divide-y divide-border max-h-64 overflow-y-auto">
-                {data.positions.map((p, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_1fr_auto_auto] gap-3 px-4 py-2 text-xs tabular-nums">
-                    <span className="text-foreground">{p.lat.toFixed(5)}</span>
-                    <span className="text-foreground">{p.lng.toFixed(5)}</span>
-                    <span className="text-muted-foreground">{p.speed != null ? `${(p.speed * 3.6).toFixed(0)} km/h` : "—"}</span>
-                    <span className="text-muted-foreground">{new Date(p.recordedAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+function fmtSpeed(speedMs: number | null | undefined): string {
+  if (speedMs == null) return "—";
+  return `${Math.round(speedMs * 3.6)} km/h`;
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -156,7 +79,6 @@ export default function PanelTurnos() {
   const [rangeFrom, setRangeFrom] = useState<string>(toLocalDateString(today));
   const [rangeTo, setRangeTo] = useState<string>(toLocalDateString(today));
   const [routeFilter, setRouteFilter] = useState<number | null>(null);
-  const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
 
   const vehicleRouteMap = useMemo(() => {
     const map = new Map<number, number>();
@@ -209,10 +131,6 @@ export default function PanelTurnos() {
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
       <AlertasBanner />
-
-      {selectedShiftId && (
-        <ShiftPositionsModal shiftId={selectedShiftId} onClose={() => setSelectedShiftId(null)} />
-      )}
 
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -311,11 +229,15 @@ export default function PanelTurnos() {
             <div key={group.label}>
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-1">{group.label}</h2>
               <div className="border border-border rounded-xl overflow-hidden">
-                <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 px-5 py-3 bg-muted/30 border-b border-border text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                  <span>Unidad</span><span>Chofer</span>
-                  <span className="text-center">Inicio</span><span className="text-center">Fin</span>
-                  <span className="text-center">Duracion</span><span className="text-center">Estado</span>
-                  <span className="text-center">GPS</span>
+                <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] gap-3 px-5 py-3 bg-muted/30 border-b border-border text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                  <span>Unidad</span>
+                  <span>Chofer</span>
+                  <span className="text-center">Inicio</span>
+                  <span className="text-center">Fin</span>
+                  <span className="text-center">Duracion</span>
+                  <span className="text-center">Vel. prom.</span>
+                  <span className="text-center">Vel. max.</span>
+                  <span className="text-center">Estado</span>
                 </div>
                 {group.items.map((shift, idx) => {
                   const isActive = !shift.endedAt;
@@ -323,7 +245,7 @@ export default function PanelTurnos() {
                   const routeName = routes?.find((r) => r.id === routeId)?.name;
                   return (
                     <div key={shift.id}
-                      className={`grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 px-5 py-4 items-center ${idx < group.items.length - 1 ? "border-b border-border" : ""} ${isActive ? "bg-accent/5" : ""}`}>
+                      className={`grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] gap-3 px-5 py-4 items-center ${idx < group.items.length - 1 ? "border-b border-border" : ""} ${isActive ? "bg-accent/5" : ""}`}>
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-sm bg-secondary text-foreground px-2.5 py-1 rounded-md tracking-wider">{shift.plateNumber}</span>
                       </div>
@@ -334,26 +256,16 @@ export default function PanelTurnos() {
                       <span className="text-sm text-foreground tabular-nums">{formatTime(shift.startedAt)}</span>
                       <span className="text-sm text-muted-foreground tabular-nums">{shift.endedAt ? formatTime(shift.endedAt) : "—"}</span>
                       <span className="text-sm text-foreground tabular-nums text-center">{formatDuration(shift.startedAt, shift.endedAt)}</span>
+                      <span className="text-sm text-muted-foreground tabular-nums text-center">{fmtSpeed(shift.avgSpeed)}</span>
+                      <span className="text-sm text-muted-foreground tabular-nums text-center">{fmtSpeed(shift.maxSpeed)}</span>
                       <div className="flex justify-center">
                         {isActive ? (
                           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/15 text-accent text-xs font-medium">
                             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />En curso
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">{shift.positionsCount} pts</span>
+                          <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">Completado</span>
                         )}
-                      </div>
-                      <div className="flex justify-center">
-                        <button
-                          onClick={() => setSelectedShiftId(shift.id)}
-                          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                          title="Ver historial GPS"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                            <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
-                            <path d="M8 5v3.5l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </button>
                       </div>
                     </div>
                   );

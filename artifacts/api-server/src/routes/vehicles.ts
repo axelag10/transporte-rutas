@@ -4,10 +4,11 @@ import {
   vehiclesTable,
   positionsTable,
   stopsTable,
+  shiftsTable,
   insertVehicleSchema,
   insertPositionSchema,
 } from "@workspace/db/schema";
-import { eq, desc, and, gte } from "drizzle-orm";
+import { eq, desc, and, gte, isNull } from "drizzle-orm";
 
 const router = Router();
 
@@ -87,6 +88,8 @@ router.post("/vehicles/:id/position", async (req, res) => {
     res.status(400).json({ error: parsed.error.issues });
     return;
   }
+
+  // Upsert: solo guarda la posicion actual, sin historial
   const [position] = await db
     .insert(positionsTable)
     .values({ ...parsed.data, recordedAt: new Date() })
@@ -101,6 +104,35 @@ router.post("/vehicles/:id/position", async (req, res) => {
       },
     })
     .returning();
+
+  // Actualizar estadisticas de velocidad en el turno activo
+  const [activeShift] = await db
+    .select()
+    .from(shiftsTable)
+    .where(and(eq(shiftsTable.vehicleId, vehicleId), isNull(shiftsTable.endedAt)))
+    .limit(1);
+
+  if (activeShift) {
+    const speed = parsed.data.speed ?? null;
+    const count = activeShift.positionsCount;
+    const newCount = count + 1;
+
+    const newAvg =
+      speed != null
+        ? ((activeShift.avgSpeed ?? 0) * count + speed) / newCount
+        : activeShift.avgSpeed;
+
+    const newMax =
+      speed != null
+        ? Math.max(activeShift.maxSpeed ?? 0, speed)
+        : activeShift.maxSpeed;
+
+    await db
+      .update(shiftsTable)
+      .set({ positionsCount: newCount, avgSpeed: newAvg, maxSpeed: newMax })
+      .where(eq(shiftsTable.id, activeShift.id));
+  }
+
   res.json({ ok: true, recordedAt: position.recordedAt });
 });
 

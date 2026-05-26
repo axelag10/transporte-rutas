@@ -3,46 +3,63 @@ import { useGetRoute, useGetRouteLive, useGetEta } from "@workspace/api-client-r
 import type { StopEta, VehicleLive, Stop } from "@workspace/api-client-react";
 import { EsquemaRuta } from "@/components/EsquemaRuta";
 
-function EtaList({ vehicleId, routeColor }: { vehicleId: number; routeColor: string }) {
+function EtaList({ vehicleId, plateNumber, driverName, routeColor }: {
+  vehicleId: number;
+  plateNumber: string;
+  driverName: string;
+  routeColor: string;
+}) {
   const { data: eta, isLoading } = useGetEta(vehicleId, {
-    query: { refetchInterval: 10000, enabled: !!vehicleId }
+    query: { refetchInterval: 20000, enabled: !!vehicleId }
   });
 
-  if (isLoading) return (
-    <div className="space-y-2 animate-pulse">
-      {[1,2,3].map(i => <div key={i} className="h-10 bg-muted rounded-lg" />)}
-    </div>
-  );
-
-  if (!eta) return null;
-
   return (
-    <div className="space-y-2">
-      {eta.stops.map((stop: StopEta, i: number) => (
-        <div key={stop.stopId} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-              style={{ backgroundColor: routeColor + '33', color: routeColor }}
-            >
-              {i + 1}
-            </div>
-            <span className="text-sm text-foreground">{stop.stopName}</span>
-          </div>
-          <div className="text-right flex-shrink-0 ml-2">
-            {stop.etaMinutes !== null && stop.etaMinutes !== undefined ? (
-              <span className={`text-sm font-semibold ${stop.etaMinutes < 5 ? 'text-accent' : 'text-primary'}`}>
-                {stop.etaMinutes < 1 ? 'Llegando' : `~${Math.round(stop.etaMinutes)} min`}
-              </span>
-            ) : (
-              <span className="text-sm text-muted-foreground">Sin datos</span>
-            )}
-            {stop.distanceKm !== null && stop.distanceKm !== undefined && (
-              <p className="text-xs text-muted-foreground">{stop.distanceKm} km</p>
-            )}
-          </div>
+    <div className="border border-border rounded-xl overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 bg-muted/30">
+        <span className="w-2 h-2 rounded-full flex-shrink-0 animate-pulse" style={{ backgroundColor: routeColor }} />
+        <span className="text-sm font-semibold text-foreground font-mono">{plateNumber}</span>
+        <span className="text-xs text-muted-foreground">{driverName}</span>
+      </div>
+
+      {isLoading && (
+        <div className="space-y-2 p-3 animate-pulse">
+          {[1, 2, 3].map(i => <div key={i} className="h-9 bg-muted rounded-lg" />)}
         </div>
-      ))}
+      )}
+
+      {!isLoading && !eta && (
+        <p className="text-xs text-muted-foreground text-center py-4 px-4">Sin posicion reciente.</p>
+      )}
+
+      {eta && (
+        <div className="divide-y divide-border">
+          {eta.stops.map((stop: StopEta, i: number) => (
+            <div key={stop.stopId} className="flex items-center justify-between px-4 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                  style={{ backgroundColor: routeColor + '22', color: routeColor }}
+                >
+                  {i + 1}
+                </div>
+                <span className="text-sm text-foreground">{stop.stopName}</span>
+              </div>
+              <div className="text-right flex-shrink-0 ml-2">
+                {stop.etaMinutes !== null && stop.etaMinutes !== undefined ? (
+                  <span className={`text-sm font-semibold ${stop.etaMinutes < 5 ? 'text-accent' : 'text-primary'}`}>
+                    {stop.etaMinutes < 1 ? 'Llegando' : `~${Math.round(stop.etaMinutes)} min`}
+                  </span>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Sin datos</span>
+                )}
+                {stop.distanceKm !== null && stop.distanceKm !== undefined && (
+                  <p className="text-[10px] text-muted-foreground">{stop.distanceKm} km</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -56,7 +73,7 @@ export default function RouteMap() {
   });
 
   const { data: live } = useGetRouteLive(routeId, {
-    query: { enabled: !!routeId, refetchInterval: 5000 }
+    query: { enabled: !!routeId, refetchInterval: 20000 }
   });
 
   if (isLoading) {
@@ -112,7 +129,7 @@ export default function RouteMap() {
           <div className="border border-border rounded-xl overflow-hidden bg-card" style={{ minHeight: 300 }}>
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Mapa en tiempo real</span>
-              <span className="text-xs text-muted-foreground">Actualiza cada 5 seg</span>
+              <span className="text-xs text-muted-foreground">Actualiza cada 20 seg</span>
             </div>
             <div style={{ height: 340 }}>
               <EsquemaRuta stops={stops} vehicles={vehicles} color={route.color} />
@@ -145,7 +162,17 @@ export default function RouteMap() {
               Tiempos estimados de llegada
             </h3>
             {vehicles.length > 0 ? (
-              <EtaList vehicleId={vehicles[0].vehicleId} routeColor={route.color} />
+              <div className="space-y-4">
+                {vehicles.map(v => (
+                  <EtaList
+                    key={v.vehicleId}
+                    vehicleId={v.vehicleId}
+                    plateNumber={v.plateNumber}
+                    driverName={v.driverName}
+                    routeColor={route.color}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 <p>No hay camiones activos en esta ruta.</p>
