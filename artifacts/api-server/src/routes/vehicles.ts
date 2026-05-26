@@ -205,14 +205,21 @@ router.get("/routes/:id/live", async (req, res) => {
     .from(vehiclesTable)
     .where(and(eq(vehiclesTable.routeId, routeId), eq(vehiclesTable.active, true)));
 
-  const since = new Date(Date.now() - 10 * 60 * 1000);
-
   const liveVehicles = await Promise.all(
     vehicles.map(async (v) => {
+      // Solo aparece en vivo si tiene un turno activo (sin endedAt)
+      const [activeShift] = await db
+        .select()
+        .from(shiftsTable)
+        .where(and(eq(shiftsTable.vehicleId, v.id), isNull(shiftsTable.endedAt)))
+        .limit(1);
+
+      if (!activeShift) return null;
+
       const [pos] = await db
         .select()
         .from(positionsTable)
-        .where(and(eq(positionsTable.vehicleId, v.id), gte(positionsTable.recordedAt, since)))
+        .where(eq(positionsTable.vehicleId, v.id))
         .orderBy(desc(positionsTable.recordedAt))
         .limit(1);
 
@@ -229,7 +236,7 @@ router.get("/routes/:id/live", async (req, res) => {
     }),
   );
 
-  res.json({ routeId, vehicles: liveVehicles.filter((v) => v.lat !== null) });
+  res.json({ routeId, vehicles: liveVehicles.filter((v) => v !== null && v.lat !== null) });
 });
 
 export default router;
