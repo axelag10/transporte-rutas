@@ -52,11 +52,13 @@ export function EsquemaRuta({ stops, vehicles, color }: Props) {
   const SVG_H = PADDING_TOP + PADDING_BOTTOM + (n - 1) * STEP;
 
   return (
-    <div className="w-full h-full overflow-y-auto overflow-x-hidden">
+    <div className="w-full h-full overflow-hidden">
       <svg
         width="100%"
+        height="100%"
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        style={{ minHeight: SVG_H, display: "block" }}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ display: "block" }}
         aria-label="Esquema de ruta"
       >
         {/* ── Línea de ruta ─────────────────────────────────────── */}
