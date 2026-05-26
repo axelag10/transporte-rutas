@@ -1,8 +1,13 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "I0ndkpnFTur7kH9exIY24"
 uri = "file://artifacts/chofer-app/assets/images/icon.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "9tbddkuZ5pPLsLOYPsToV"
+uri = "file://.local/outputs/Hola-Entender.pptx"
+type = "slides"
+title = "Hola Entender.pptx"
