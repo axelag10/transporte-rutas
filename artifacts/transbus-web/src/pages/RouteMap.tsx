@@ -126,12 +126,12 @@ export default function RouteMap() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3">
-          <div className="border border-border rounded-xl overflow-hidden bg-card" style={{ minHeight: 300 }}>
+          <div className="border border-border rounded-xl overflow-hidden bg-card">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Mapa en tiempo real</span>
               <span className="text-xs text-muted-foreground">Actualiza cada 20 seg</span>
             </div>
-            <div style={{ height: 340 }}>
+            <div className="h-[220px] sm:h-[340px]">
               <EsquemaRuta stops={stops} vehicles={vehicles} color={route.color} />
             </div>
           </div>

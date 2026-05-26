@@ -50,19 +50,19 @@
 }
 
 html.light {
-  --background: 210 20% 97%;
+  --background: 210 18% 91%;
   --foreground: 215 28% 12%;
-  --border: 215 15% 84%;
-  --input: 215 15% 84%;
+  --border: 215 14% 78%;
+  --input: 215 14% 78%;
   --ring: 199 89% 42%;
-  --card: 0 0% 100%;
+  --card: 210 16% 96%;
   --card-foreground: 215 28% 12%;
   --primary: 199 89% 40%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 215 15% 91%;
+  --secondary: 215 14% 85%;
   --secondary-foreground: 215 25% 25%;
-  --muted: 215 15% 91%;
-  --muted-foreground: 215 15% 48%;
+  --muted: 215 14% 86%;
+  --muted-foreground: 215 14% 44%;
   --accent: 160 80% 32%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 72% 51%;

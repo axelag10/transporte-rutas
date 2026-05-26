@@ -66,14 +66,14 @@ export default function Home() {
   const { data: routes, isLoading, error } = useListRoutes();
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10">
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium mb-4">
+    <main className="max-w-2xl mx-auto px-4 py-6 sm:py-10">
+      <div className="mb-6 sm:mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium mb-3 sm:mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
           Tiempo real
         </div>
-        <h1 className="text-3xl font-bold text-foreground">Rutas de transporte</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-xl sm:text-3xl font-bold text-foreground">Rutas de transporte</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1.5 sm:mt-2">
           Selecciona una ruta para ver los camiones activos y el tiempo estimado de llegada a cada parada.
         </p>
       </div>
