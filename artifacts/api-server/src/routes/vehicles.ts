@@ -87,7 +87,20 @@ router.post("/vehicles/:id/position", async (req, res) => {
     res.status(400).json({ error: parsed.error.issues });
     return;
   }
-  const [position] = await db.insert(positionsTable).values(parsed.data).returning();
+  const [position] = await db
+    .insert(positionsTable)
+    .values({ ...parsed.data, recordedAt: new Date() })
+    .onConflictDoUpdate({
+      target: positionsTable.vehicleId,
+      set: {
+        lat: parsed.data.lat,
+        lng: parsed.data.lng,
+        speed: parsed.data.speed ?? null,
+        heading: parsed.data.heading ?? null,
+        recordedAt: new Date(),
+      },
+    })
+    .returning();
   res.json({ ok: true, recordedAt: position.recordedAt });
 });
 
