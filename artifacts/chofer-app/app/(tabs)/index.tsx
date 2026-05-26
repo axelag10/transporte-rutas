@@ -23,7 +23,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
 
-const GPS_INTERVAL_MS = 5000;
+const GPS_INTERVAL_MS = 20000;
 
 interface GeoCoords {
   latitude: number;
