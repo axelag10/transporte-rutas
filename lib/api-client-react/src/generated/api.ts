@@ -651,6 +651,80 @@ export const useCreateStop = <TError = ErrorType<unknown>,
       return useMutation(getCreateStopMutationOptions(options));
     }
 
+export const getUpdateStopUrl = (id: number,
+    stopId: number,) => {
+
+
+
+
+  return `/api/routes/${id}/stops/${stopId}`
+}
+
+/**
+ * @summary Edita una parada de la ruta
+ */
+export const updateStop = async (id: number,
+    stopId: number,
+    createStop: CreateStop, options?: RequestInit): Promise<Stop> => {
+
+  return customFetch<Stop>(getUpdateStopUrl(id,stopId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createStop,)
+  }
+);}
+
+
+
+
+export const getUpdateStopMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStop>>, TError,{id: number;stopId: number;data: BodyType<CreateStop>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateStop>>, TError,{id: number;stopId: number;data: BodyType<CreateStop>}, TContext> => {
+
+const mutationKey = ['updateStop'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateStop>>, {id: number;stopId: number;data: BodyType<CreateStop>}> = (props) => {
+          const {id,stopId,data} = props ?? {};
+
+          return  updateStop(id,stopId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateStopMutationResult = NonNullable<Awaited<ReturnType<typeof updateStop>>>
+    export type UpdateStopMutationBody = BodyType<CreateStop>
+    export type UpdateStopMutationError = ErrorType<void>
+
+    /**
+ * @summary Edita una parada de la ruta
+ */
+export const useUpdateStop = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStop>>, TError,{id: number;stopId: number;data: BodyType<CreateStop>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateStop>>,
+        TError,
+        {id: number;stopId: number;data: BodyType<CreateStop>},
+        TContext
+      > => {
+      return useMutation(getUpdateStopMutationOptions(options));
+    }
+
 export const getDeleteStopUrl = (id: number,
     stopId: number,) => {
 

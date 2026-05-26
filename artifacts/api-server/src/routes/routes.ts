@@ -76,6 +76,18 @@ router.post("/routes/:id/stops", async (req, res) => {
   res.status(201).json(stops[0]);
 });
 
+router.put("/routes/:id/stops/:stopId", async (req, res) => {
+  const stopId = Number(req.params.stopId);
+  const { name, lat, lng, order } = req.body as { name?: string; lat?: number; lng?: number; order?: number };
+  const [updated] = await db
+    .update(stopsTable)
+    .set({ ...(name !== undefined && { name }), ...(lat !== undefined && { lat }), ...(lng !== undefined && { lng }), ...(order !== undefined && { order }) })
+    .where(eq(stopsTable.id, stopId))
+    .returning();
+  if (!updated) { res.status(404).json({ error: "Parada no encontrada" }); return; }
+  res.json(updated);
+});
+
 router.delete("/routes/:id/stops/:stopId", async (req, res) => {
   const stopId = Number(req.params.stopId);
   const [deleted] = await db.delete(stopsTable).where(eq(stopsTable.id, stopId)).returning();

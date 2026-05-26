@@ -7,6 +7,7 @@ import {
   useListStops,
   useCreateStop,
   useDeleteStop,
+  useUpdateStop,
 } from "@workspace/api-client-react";
 import { getListRoutesQueryKey, getListStopsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -57,6 +58,7 @@ function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void 
   const { mutateAsync: updateRoute, isPending } = useUpdateRoute();
   const { mutateAsync: createStop } = useCreateStop();
   const { mutateAsync: deleteStop } = useDeleteStop();
+  const { mutateAsync: updateStop } = useUpdateStop();
   const { data: stops, refetch: refetchStops } = useListStops(route.id);
 
   const [form, setForm] = useState({
@@ -68,6 +70,12 @@ function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void 
   const [stopForm, setStopForm] = useState({ name: "", coords: "" });
   const [stopError, setStopError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Edicion inline de paradas
+  const [editingStopId, setEditingStopId] = useState<number | null>(null);
+  const [editStopForm, setEditStopForm] = useState({ name: "", coords: "", order: "" });
+  const [editStopError, setEditStopError] = useState<string | null>(null);
+  const [editStopSaving, setEditStopSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,6 +125,45 @@ function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void 
       await deleteStop({ id: route.id, stopId });
       await refetchStops();
     } catch {}
+  };
+
+  const startEditStop = (stop: { id: number; name: string; lat: number; lng: number; order: number }) => {
+    setEditingStopId(stop.id);
+    setEditStopForm({
+      name: stop.name,
+      coords: `${stop.lat}, ${stop.lng}`,
+      order: String(stop.order),
+    });
+    setEditStopError(null);
+  };
+
+  const cancelEditStop = () => {
+    setEditingStopId(null);
+    setEditStopError(null);
+  };
+
+  const handleSaveStop = async (stopId: number) => {
+    setEditStopError(null);
+    if (!editStopForm.name.trim()) { setEditStopError("El nombre es requerido."); return; }
+    const parts = editStopForm.coords.split(",").map((s) => s.trim());
+    const lat = parseFloat(parts[0] ?? "");
+    const lng = parseFloat(parts[1] ?? "");
+    if (parts.length !== 2 || isNaN(lat) || isNaN(lng)) {
+      setEditStopError("Formato incorrecto. Ejemplo: 19.82413, -99.11613");
+      return;
+    }
+    const order = parseInt(editStopForm.order, 10);
+    if (isNaN(order) || order < 1) { setEditStopError("El orden debe ser un numero positivo."); return; }
+    setEditStopSaving(true);
+    try {
+      await updateStop({ id: route.id, stopId, data: { name: editStopForm.name.trim(), lat, lng, order } });
+      await refetchStops();
+      setEditingStopId(null);
+    } catch {
+      setEditStopError("Error al guardar los cambios.");
+    } finally {
+      setEditStopSaving(false);
+    }
   };
 
   return (
@@ -188,24 +235,81 @@ function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void 
 
             {stops && stops.length > 0 && (
               <div className="border border-border rounded-xl overflow-hidden mb-3">
-                <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-3 px-4 py-2 bg-muted/30 border-b border-border text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                  <span>#</span><span>Nombre</span><span>Lat</span><span>Lng</span><span></span>
+                <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 px-4 py-2 bg-muted/30 border-b border-border text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                  <span>#</span><span>Nombre</span><span>Lat</span><span>Lng</span><span></span><span></span>
                 </div>
-                {stops.map((stop) => (
-                  <div key={stop.id} className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-3 px-4 py-2.5 items-center border-b border-border last:border-0">
-                    <span className="text-xs text-muted-foreground tabular-nums w-5">{stop.order}</span>
-                    <span className="text-sm text-foreground">{stop.name}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">{stop.lat.toFixed(4)}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">{stop.lng.toFixed(4)}</span>
-                    <button
-                      onClick={() => handleDeleteStop(stop.id)}
-                      className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
-                      title="Eliminar parada"
-                    >
-                      <IconTrash />
-                    </button>
-                  </div>
-                ))}
+                {editStopError && editingStopId !== null && (
+                  <p className="text-xs text-red-500 bg-red-500/10 border-b border-red-500/20 px-4 py-2">{editStopError}</p>
+                )}
+                {stops.map((stop) =>
+                  editingStopId === stop.id ? (
+                    /* ── Fila en modo edicion ── */
+                    <div key={stop.id} className="px-4 py-3 border-b border-border last:border-0 space-y-2 bg-muted/20">
+                      <div className="grid grid-cols-[2rem_1fr] gap-2 items-center">
+                        <input
+                          type="number"
+                          min={1}
+                          value={editStopForm.order}
+                          onChange={(e) => setEditStopForm((f) => ({ ...f, order: e.target.value }))}
+                          className="w-full px-2 py-1.5 rounded-md bg-muted border border-border text-xs text-foreground text-center focus:outline-none focus:ring-1 focus:ring-primary"
+                          title="Orden"
+                        />
+                        <input
+                          type="text"
+                          value={editStopForm.name}
+                          onChange={(e) => setEditStopForm((f) => ({ ...f, name: e.target.value }))}
+                          placeholder="Nombre"
+                          className="w-full px-2 py-1.5 rounded-md bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={editStopForm.coords}
+                        onChange={(e) => setEditStopForm((f) => ({ ...f, coords: e.target.value }))}
+                        placeholder="19.82413, -99.11613"
+                        className="w-full px-2 py-1.5 rounded-md bg-muted border border-border text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSaveStop(stop.id)}
+                          disabled={editStopSaving}
+                          className="flex-1 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-white text-xs font-semibold transition-colors disabled:opacity-60"
+                        >
+                          {editStopSaving ? "Guardando..." : "Guardar"}
+                        </button>
+                        <button
+                          onClick={cancelEditStop}
+                          className="flex-1 py-1.5 rounded-md bg-muted hover:bg-secondary border border-border text-xs text-foreground transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* ── Fila normal ── */
+                    <div key={stop.id} className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 px-4 py-2.5 items-center border-b border-border last:border-0">
+                      <span className="text-xs text-muted-foreground tabular-nums w-5">{stop.order}</span>
+                      <span className="text-sm text-foreground">{stop.name}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{stop.lat.toFixed(4)}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{stop.lng.toFixed(4)}</span>
+                      <button
+                        onClick={() => startEditStop(stop)}
+                        className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                        title="Editar parada"
+                      >
+                        <IconEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStop(stop.id)}
+                        className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+                        title="Eliminar parada"
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
+                  )
+                )}
               </div>
             )}
 

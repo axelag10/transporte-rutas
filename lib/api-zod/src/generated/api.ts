@@ -146,6 +146,32 @@ export const CreateStopBody = zod.object({
 
 
 /**
+ * @summary Edita una parada de la ruta
+ */
+export const UpdateStopParams = zod.object({
+  "id": zod.coerce.number(),
+  "stopId": zod.coerce.number()
+})
+
+export const UpdateStopBody = zod.object({
+  "name": zod.string(),
+  "lat": zod.number(),
+  "lng": zod.number(),
+  "order": zod.number()
+})
+
+export const UpdateStopResponse = zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "name": zod.string(),
+  "lat": zod.number(),
+  "lng": zod.number(),
+  "order": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Elimina una parada de la ruta
  */
 export const DeleteStopParams = zod.object({

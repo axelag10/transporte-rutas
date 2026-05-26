@@ -177,6 +177,36 @@ paths:
                 $ref: "#/components/schemas/Stop"
 
   /routes/{id}/stops/{stopId}:
+    put:
+      operationId: updateStop
+      tags: [stops]
+      summary: Edita una parada de la ruta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: stopId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStop"
+      responses:
+        "200":
+          description: Parada actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stop"
+        "404":
+          description: No encontrada
     delete:
       operationId: deleteStop
       tags: [stops]
