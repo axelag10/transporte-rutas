@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { Stop, VehicleLive } from "@workspace/api-client-react";
 
 interface Props {
@@ -36,6 +37,16 @@ function posicionVehiculo(
 }
 
 export function EsquemaRuta({ stops, vehicles, color }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fuerza scroll al inicio cada vez que cambian los vehiculos (evita que Chrome
+  // mueva el scroll automaticamente al agregar/quitar elementos del SVG)
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [vehicles]);
+
   const sorted = [...stops].sort((a, b) => a.order - b.order);
   const n = sorted.length;
   if (n === 0) return (
@@ -52,7 +63,11 @@ export function EsquemaRuta({ stops, vehicles, color }: Props) {
   const SVG_H = PADDING_TOP + PADDING_BOTTOM + (n - 1) * STEP;
 
   return (
-    <div className="w-full h-full overflow-y-auto overflow-x-hidden" style={{ overflowAnchor: "none" }}>
+    <div
+      ref={scrollRef}
+      className="w-full h-full overflow-y-auto overflow-x-hidden"
+      style={{ overflowAnchor: "none" }}
+    >
       <svg
         width="100%"
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
