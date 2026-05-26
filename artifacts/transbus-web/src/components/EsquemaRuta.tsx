@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { Stop, VehicleLive } from "@workspace/api-client-react";
 
 interface Props {
@@ -39,9 +39,9 @@ function posicionVehiculo(
 export function EsquemaRuta({ stops, vehicles, color }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fuerza scroll al inicio cada vez que cambian los vehiculos (evita que Chrome
-  // mueva el scroll automaticamente al agregar/quitar elementos del SVG)
-  useEffect(() => {
+  // useLayoutEffect corre antes de que el navegador pinte, evitando que Chrome
+  // mueva el scroll cuando aparecen los marcadores de vehiculos en el SVG
+  useLayoutEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
     }

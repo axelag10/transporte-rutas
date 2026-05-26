@@ -65,7 +65,7 @@ function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void 
     color: route.color,
     active: route.active,
   });
-  const [stopForm, setStopForm] = useState({ name: "", lat: "", lng: "" });
+  const [stopForm, setStopForm] = useState({ name: "", coords: "" });
   const [stopError, setStopError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,17 +92,21 @@ function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void 
   const handleAddStop = async (e: React.FormEvent) => {
     e.preventDefault();
     setStopError(null);
-    const lat = parseFloat(stopForm.lat);
-    const lng = parseFloat(stopForm.lng);
     if (!stopForm.name.trim()) { setStopError("El nombre es requerido."); return; }
-    if (isNaN(lat) || isNaN(lng)) { setStopError("Latitud y longitud deben ser numeros validos."); return; }
+    const parts = stopForm.coords.split(",").map((s) => s.trim());
+    const lat = parseFloat(parts[0] ?? "");
+    const lng = parseFloat(parts[1] ?? "");
+    if (parts.length !== 2 || isNaN(lat) || isNaN(lng)) {
+      setStopError("Formato incorrecto. Ejemplo: 19.82413, -99.11613");
+      return;
+    }
     try {
       await createStop({
         id: route.id,
         data: { name: stopForm.name.trim(), lat, lng, order: (stops?.length ?? 0) + 1 },
       });
       await refetchStops();
-      setStopForm({ name: "", lat: "", lng: "" });
+      setStopForm({ name: "", coords: "" });
     } catch {
       setStopError("Error al agregar la parada.");
     }
@@ -210,7 +214,7 @@ function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void 
               {stopError && (
                 <p className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{stopError}</p>
               )}
-              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2">
+              <div className="grid grid-cols-[1fr_auto] gap-2">
                 <input
                   type="text"
                   placeholder="Nombre de la parada"
@@ -218,21 +222,15 @@ function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void 
                   onChange={(e) => setStopForm((f) => ({ ...f, name: e.target.value }))}
                   className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
+              </div>
+              <div className="grid grid-cols-[1fr_auto] gap-2">
                 <input
                   type="text"
                   inputMode="decimal"
-                  placeholder="Latitud"
-                  value={stopForm.lat}
-                  onChange={(e) => setStopForm((f) => ({ ...f, lat: e.target.value }))}
-                  className="w-28 px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
-                />
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="Longitud"
-                  value={stopForm.lng}
-                  onChange={(e) => setStopForm((f) => ({ ...f, lng: e.target.value }))}
-                  className="w-28 px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                  placeholder="19.82413, -99.11613"
+                  value={stopForm.coords}
+                  onChange={(e) => setStopForm((f) => ({ ...f, coords: e.target.value }))}
+                  className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
                 />
                 <button
                   type="submit"
