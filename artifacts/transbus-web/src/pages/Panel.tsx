@@ -1,8 +1,319 @@
 import { Link } from "wouter";
-import { useListRoutes, useGetRouteLive } from "@workspace/api-client-react";
+import {
+  useListRoutes,
+  useGetRouteLive,
+  useUpdateRoute,
+  useDeleteRoute,
+  useListStops,
+  useCreateStop,
+  useDeleteStop,
+} from "@workspace/api-client-react";
+import { getListRoutesQueryKey, getListStopsQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertasBanner } from "@/components/AlertasBanner";
+import { useState } from "react";
 
-function RouteRow({ route }: { route: { id: number; name: string; color: string; active: boolean; description?: string | null } }) {
+// ─── Icono lápiz ─────────────────────────────────────────────────────────────
+function IconEdit() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+      <path d="M11 2l3 3-9 9H2v-3l9-9z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+function IconTrash() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+      <path d="M2 4h12M6 4V2h4v2M5 4l1 9h4l1-9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+function IconPlus() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    </svg>
+  );
+}
+function IconClose() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+      <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+// ─── Modal editar ruta ────────────────────────────────────────────────────────
+interface Route {
+  id: number;
+  name: string;
+  description?: string | null;
+  color: string;
+  active: boolean;
+}
+
+function EditRouteModal({ route, onClose }: { route: Route; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { mutateAsync: updateRoute, isPending } = useUpdateRoute();
+  const { mutateAsync: createStop } = useCreateStop();
+  const { mutateAsync: deleteStop } = useDeleteStop();
+  const { data: stops, refetch: refetchStops } = useListStops(route.id);
+
+  const [form, setForm] = useState({
+    name: route.name,
+    description: route.description ?? "",
+    color: route.color,
+    active: route.active,
+  });
+  const [stopForm, setStopForm] = useState({ name: "", lat: "", lng: "" });
+  const [stopError, setStopError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await updateRoute({
+        id: route.id,
+        data: {
+          name: form.name.trim(),
+          description: form.description.trim() || null,
+          color: form.color,
+          active: form.active,
+        },
+      });
+      await queryClient.invalidateQueries({ queryKey: getListRoutesQueryKey() });
+      onClose();
+    } catch {
+      setError("Error al guardar los cambios.");
+    }
+  };
+
+  const handleAddStop = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStopError(null);
+    const lat = parseFloat(stopForm.lat);
+    const lng = parseFloat(stopForm.lng);
+    if (!stopForm.name.trim()) { setStopError("El nombre es requerido."); return; }
+    if (isNaN(lat) || isNaN(lng)) { setStopError("Latitud y longitud deben ser numeros validos."); return; }
+    try {
+      await createStop({
+        id: route.id,
+        data: { name: stopForm.name.trim(), lat, lng, order: (stops?.length ?? 0) + 1 },
+      });
+      await refetchStops();
+      setStopForm({ name: "", lat: "", lng: "" });
+    } catch {
+      setStopError("Error al agregar la parada.");
+    }
+  };
+
+  const handleDeleteStop = async (stopId: number) => {
+    try {
+      await deleteStop({ id: route.id, stopId });
+      await refetchStops();
+    } catch {}
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+      <div className="bg-card border border-border rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground">Editar ruta</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
+            <IconClose />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          {/* Datos de la ruta */}
+          <form id="route-form" onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <p className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
+            )}
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Nombre</label>
+              <input
+                required
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                className="w-full px-3 py-2.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Descripcion</label>
+              <input
+                type="text"
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                className="w-full px-3 py-2.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div className="flex gap-4">
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.color}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                    className="w-10 h-10 rounded-lg border border-border bg-muted cursor-pointer"
+                  />
+                  <span className="text-sm font-mono text-muted-foreground">{form.color}</span>
+                </div>
+              </div>
+              <div className="flex items-end gap-2 pb-0.5">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.active}
+                    onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+                    className="w-4 h-4 rounded accent-primary"
+                  />
+                  <span className="text-sm text-foreground">Activa</span>
+                </label>
+              </div>
+            </div>
+          </form>
+
+          {/* Paradas */}
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Paradas</h3>
+
+            {stops && stops.length > 0 && (
+              <div className="border border-border rounded-xl overflow-hidden mb-3">
+                <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-3 px-4 py-2 bg-muted/30 border-b border-border text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                  <span>#</span><span>Nombre</span><span>Lat</span><span>Lng</span><span></span>
+                </div>
+                {stops.map((stop) => (
+                  <div key={stop.id} className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-3 px-4 py-2.5 items-center border-b border-border last:border-0">
+                    <span className="text-xs text-muted-foreground tabular-nums w-5">{stop.order}</span>
+                    <span className="text-sm text-foreground">{stop.name}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{stop.lat.toFixed(4)}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{stop.lng.toFixed(4)}</span>
+                    <button
+                      onClick={() => handleDeleteStop(stop.id)}
+                      className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+                      title="Eliminar parada"
+                    >
+                      <IconTrash />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario agregar parada */}
+            <form onSubmit={handleAddStop} className="space-y-2">
+              {stopError && (
+                <p className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{stopError}</p>
+              )}
+              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2">
+                <input
+                  type="text"
+                  placeholder="Nombre de la parada"
+                  value={stopForm.name}
+                  onChange={(e) => setStopForm((f) => ({ ...f, name: e.target.value }))}
+                  className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Latitud"
+                  value={stopForm.lat}
+                  onChange={(e) => setStopForm((f) => ({ ...f, lat: e.target.value }))}
+                  className="w-28 px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Longitud"
+                  value={stopForm.lng}
+                  onChange={(e) => setStopForm((f) => ({ ...f, lng: e.target.value }))}
+                  className="w-28 px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                />
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-secondary border border-border text-sm text-foreground transition-colors"
+                  title="Agregar parada"
+                >
+                  <IconPlus />
+                  Agregar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 px-6 py-4 border-t border-border">
+          <button type="button" onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-muted hover:bg-secondary text-sm text-foreground transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" form="route-form" disabled={isPending}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold transition-colors disabled:opacity-60">
+            {isPending ? "Guardando..." : "Guardar cambios"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal confirmar borrado ──────────────────────────────────────────────────
+function DeleteRouteModal({ route, onClose }: { route: Route; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { mutateAsync: deleteRoute, isPending } = useDeleteRoute();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    setError(null);
+    try {
+      await deleteRoute({ id: route.id });
+      await queryClient.invalidateQueries({ queryKey: getListRoutesQueryKey() });
+      onClose();
+    } catch {
+      setError("Error al eliminar la ruta. Puede tener vehiculos o turnos asociados.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+      <div className="bg-card border border-border rounded-2xl w-full max-w-sm shadow-2xl">
+        <div className="px-6 py-6">
+          <h2 className="text-base font-semibold text-foreground mb-2">Eliminar ruta</h2>
+          <p className="text-sm text-muted-foreground mb-1">
+            Estas a punto de eliminar la ruta <strong className="text-foreground">{route.name}</strong>.
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">Esta accion no se puede deshacer.</p>
+          {error && (
+            <p className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-4">{error}</p>
+          )}
+          <div className="flex gap-3">
+            <button onClick={onClose}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-muted hover:bg-secondary text-sm text-foreground transition-colors">
+              Cancelar
+            </button>
+            <button onClick={handleDelete} disabled={isPending}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors disabled:opacity-60">
+              {isPending ? "Eliminando..." : "Eliminar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Fila de ruta ─────────────────────────────────────────────────────────────
+function RouteRow({ route, onEdit, onDelete }: {
+  route: Route;
+  onEdit: (r: Route) => void;
+  onDelete: (r: Route) => void;
+}) {
   const { data: live } = useGetRouteLive(route.id, {
     query: { refetchInterval: 15000 }
   });
@@ -28,6 +339,20 @@ function RouteRow({ route }: { route: { id: number; name: string; color: string;
               Ver mapa
             </button>
           </Link>
+          <button
+            onClick={() => onEdit(route)}
+            className="p-1.5 rounded-lg bg-muted hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+            title="Editar ruta"
+          >
+            <IconEdit />
+          </button>
+          <button
+            onClick={() => onDelete(route)}
+            className="p-1.5 rounded-lg bg-muted hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-500"
+            title="Eliminar ruta"
+          >
+            <IconTrash />
+          </button>
         </div>
       </div>
 
@@ -48,12 +373,19 @@ function RouteRow({ route }: { route: { id: number; name: string; color: string;
   );
 }
 
+// ─── Pagina principal ─────────────────────────────────────────────────────────
 export default function Panel() {
   const { data: routes, isLoading } = useListRoutes();
+  const [editRoute, setEditRoute] = useState<Route | null>(null);
+  const [deleteRoute, setDeleteRoute] = useState<Route | null>(null);
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       <AlertasBanner />
+
+      {editRoute && <EditRouteModal route={editRoute} onClose={() => setEditRoute(null)} />}
+      {deleteRoute && <DeleteRouteModal route={deleteRoute} onClose={() => setDeleteRoute(null)} />}
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Panel de control</h1>
@@ -98,7 +430,12 @@ export default function Panel() {
       {routes && routes.length > 0 && (
         <div className="space-y-4">
           {routes.map(route => (
-            <RouteRow key={route.id} route={route} />
+            <RouteRow
+              key={route.id}
+              route={route}
+              onEdit={setEditRoute}
+              onDelete={setDeleteRoute}
+            />
           ))}
         </div>
       )}

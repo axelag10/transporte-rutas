@@ -67,9 +67,47 @@ export const GetRouteResponse = zod.object({
   "routeId": zod.number(),
   "driverName": zod.string(),
   "plateNumber": zod.string(),
+  "pin": zod.string(),
   "active": zod.boolean(),
   "createdAt": zod.coerce.date()
 }))
+})
+
+
+/**
+ * @summary Edita una ruta existente
+ */
+export const UpdateRouteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateRouteBody = zod.object({
+  "name": zod.string().optional(),
+  "description": zod.string().nullish(),
+  "color": zod.string().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateRouteResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "color": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Elimina una ruta
+ */
+export const DeleteRouteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteRouteResponse = zod.object({
+  "ok": zod.boolean(),
+  "id": zod.number()
 })
 
 
@@ -108,6 +146,20 @@ export const CreateStopBody = zod.object({
 
 
 /**
+ * @summary Elimina una parada de la ruta
+ */
+export const DeleteStopParams = zod.object({
+  "id": zod.coerce.number(),
+  "stopId": zod.coerce.number()
+})
+
+export const DeleteStopResponse = zod.object({
+  "ok": zod.boolean(),
+  "id": zod.number()
+})
+
+
+/**
  * @summary Lista todos los vehículos
  */
 export const ListVehiclesResponseItem = zod.object({
@@ -115,6 +167,7 @@ export const ListVehiclesResponseItem = zod.object({
   "routeId": zod.number(),
   "driverName": zod.string(),
   "plateNumber": zod.string(),
+  "pin": zod.string(),
   "active": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
@@ -129,6 +182,45 @@ export const CreateVehicleBody = zod.object({
   "driverName": zod.string(),
   "plateNumber": zod.string(),
   "pin": zod.string().describe('PIN de 4 dígitos para autenticar al chofer')
+})
+
+
+/**
+ * @summary Edita un vehículo existente
+ */
+export const UpdateVehicleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateVehicleBody = zod.object({
+  "routeId": zod.number().optional(),
+  "driverName": zod.string().optional(),
+  "plateNumber": zod.string().optional(),
+  "pin": zod.string().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateVehicleResponse = zod.object({
+  "id": zod.number(),
+  "routeId": zod.number(),
+  "driverName": zod.string(),
+  "plateNumber": zod.string(),
+  "pin": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Elimina un vehículo
+ */
+export const DeleteVehicleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteVehicleResponse = zod.object({
+  "ok": zod.boolean(),
+  "id": zod.number()
 })
 
 

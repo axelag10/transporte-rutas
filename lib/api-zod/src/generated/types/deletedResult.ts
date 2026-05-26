@@ -6,12 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Vehicle {
+export interface DeletedResult {
+  ok: boolean;
   id: number;
-  routeId: number;
-  driverName: string;
-  plateNumber: string;
-  pin: string;
-  active: boolean;
-  createdAt: Date;
 }

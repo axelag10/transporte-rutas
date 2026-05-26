@@ -24,6 +24,7 @@ import type {
   CreateShift,
   CreateStop,
   CreateVehicle,
+  DeletedResult,
   EtaResponse,
   HealthStatus,
   ListOfflineVehiclesParams,
@@ -39,6 +40,8 @@ import type {
   ShiftRecord,
   Stop,
   UpdatePosition,
+  UpdateRoute,
+  UpdateVehicle,
   Vehicle,
   VerifyPin
 } from './api.schemas';
@@ -357,6 +360,148 @@ export function useGetRoute<TData = Awaited<ReturnType<typeof getRoute>>, TError
 
 
 
+export const getUpdateRouteUrl = (id: number,) => {
+
+
+
+
+  return `/api/routes/${id}`
+}
+
+/**
+ * @summary Edita una ruta existente
+ */
+export const updateRoute = async (id: number,
+    updateRoute: UpdateRoute, options?: RequestInit): Promise<Route> => {
+
+  return customFetch<Route>(getUpdateRouteUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateRoute,)
+  }
+);}
+
+
+
+
+export const getUpdateRouteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRoute>>, TError,{id: number;data: BodyType<UpdateRoute>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRoute>>, TError,{id: number;data: BodyType<UpdateRoute>}, TContext> => {
+
+const mutationKey = ['updateRoute'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRoute>>, {id: number;data: BodyType<UpdateRoute>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateRoute(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRouteMutationResult = NonNullable<Awaited<ReturnType<typeof updateRoute>>>
+    export type UpdateRouteMutationBody = BodyType<UpdateRoute>
+    export type UpdateRouteMutationError = ErrorType<void>
+
+    /**
+ * @summary Edita una ruta existente
+ */
+export const useUpdateRoute = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRoute>>, TError,{id: number;data: BodyType<UpdateRoute>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRoute>>,
+        TError,
+        {id: number;data: BodyType<UpdateRoute>},
+        TContext
+      > => {
+      return useMutation(getUpdateRouteMutationOptions(options));
+    }
+
+export const getDeleteRouteUrl = (id: number,) => {
+
+
+
+
+  return `/api/routes/${id}`
+}
+
+/**
+ * @summary Elimina una ruta
+ */
+export const deleteRoute = async (id: number, options?: RequestInit): Promise<DeletedResult> => {
+
+  return customFetch<DeletedResult>(getDeleteRouteUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteRouteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRoute>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRoute>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteRoute'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRoute>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteRoute(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRouteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRoute>>>
+
+    export type DeleteRouteMutationError = ErrorType<void>
+
+    /**
+ * @summary Elimina una ruta
+ */
+export const useDeleteRoute = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRoute>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRoute>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteRouteMutationOptions(options));
+    }
+
 export const getListStopsUrl = (id: number,) => {
 
 
@@ -506,6 +651,78 @@ export const useCreateStop = <TError = ErrorType<unknown>,
       return useMutation(getCreateStopMutationOptions(options));
     }
 
+export const getDeleteStopUrl = (id: number,
+    stopId: number,) => {
+
+
+
+
+  return `/api/routes/${id}/stops/${stopId}`
+}
+
+/**
+ * @summary Elimina una parada de la ruta
+ */
+export const deleteStop = async (id: number,
+    stopId: number, options?: RequestInit): Promise<DeletedResult> => {
+
+  return customFetch<DeletedResult>(getDeleteStopUrl(id,stopId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteStopMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStop>>, TError,{id: number;stopId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStop>>, TError,{id: number;stopId: number}, TContext> => {
+
+const mutationKey = ['deleteStop'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStop>>, {id: number;stopId: number}> = (props) => {
+          const {id,stopId} = props ?? {};
+
+          return  deleteStop(id,stopId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStopMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStop>>>
+
+    export type DeleteStopMutationError = ErrorType<void>
+
+    /**
+ * @summary Elimina una parada de la ruta
+ */
+export const useDeleteStop = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStop>>, TError,{id: number;stopId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStop>>,
+        TError,
+        {id: number;stopId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteStopMutationOptions(options));
+    }
+
 export const getListVehiclesUrl = () => {
 
 
@@ -652,6 +869,148 @@ export const useCreateVehicle = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateVehicleMutationOptions(options));
+    }
+
+export const getUpdateVehicleUrl = (id: number,) => {
+
+
+
+
+  return `/api/vehicles/${id}`
+}
+
+/**
+ * @summary Edita un vehículo existente
+ */
+export const updateVehicle = async (id: number,
+    updateVehicle: UpdateVehicle, options?: RequestInit): Promise<Vehicle> => {
+
+  return customFetch<Vehicle>(getUpdateVehicleUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateVehicle,)
+  }
+);}
+
+
+
+
+export const getUpdateVehicleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVehicle>>, TError,{id: number;data: BodyType<UpdateVehicle>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVehicle>>, TError,{id: number;data: BodyType<UpdateVehicle>}, TContext> => {
+
+const mutationKey = ['updateVehicle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVehicle>>, {id: number;data: BodyType<UpdateVehicle>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateVehicle(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVehicleMutationResult = NonNullable<Awaited<ReturnType<typeof updateVehicle>>>
+    export type UpdateVehicleMutationBody = BodyType<UpdateVehicle>
+    export type UpdateVehicleMutationError = ErrorType<void>
+
+    /**
+ * @summary Edita un vehículo existente
+ */
+export const useUpdateVehicle = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVehicle>>, TError,{id: number;data: BodyType<UpdateVehicle>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVehicle>>,
+        TError,
+        {id: number;data: BodyType<UpdateVehicle>},
+        TContext
+      > => {
+      return useMutation(getUpdateVehicleMutationOptions(options));
+    }
+
+export const getDeleteVehicleUrl = (id: number,) => {
+
+
+
+
+  return `/api/vehicles/${id}`
+}
+
+/**
+ * @summary Elimina un vehículo
+ */
+export const deleteVehicle = async (id: number, options?: RequestInit): Promise<DeletedResult> => {
+
+  return customFetch<DeletedResult>(getDeleteVehicleUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteVehicleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVehicle>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteVehicle>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteVehicle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteVehicle>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteVehicle(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteVehicleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteVehicle>>>
+
+    export type DeleteVehicleMutationError = ErrorType<void>
+
+    /**
+ * @summary Elimina un vehículo
+ */
+export const useDeleteVehicle = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVehicle>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteVehicle>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteVehicleMutationOptions(options));
     }
 
 export const getVerifyPinUrl = (id: number,) => {

@@ -1,6 +1,24 @@
 import { useListOfflineVehicles } from "@workspace/api-client-react";
 import { useListRoutes } from "@workspace/api-client-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const SESSION_KEY = "transbus_dismissed_alerts";
+
+function loadDismissed(): Set<number> {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as number[]);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDismissed(ids: Set<number>) {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(Array.from(ids)));
+  } catch {}
+}
 
 export function AlertasBanner() {
   const { data: alerts } = useListOfflineVehicles(
@@ -8,7 +26,11 @@ export function AlertasBanner() {
     { query: { refetchInterval: 30000 } }
   );
   const { data: routes } = useListRoutes();
-  const [dismissed, setDismissed] = useState<Set<number>>(new Set());
+  const [dismissed, setDismissed] = useState<Set<number>>(loadDismissed);
+
+  useEffect(() => {
+    saveDismissed(dismissed);
+  }, [dismissed]);
 
   const visible = (alerts ?? []).filter((a) => !dismissed.has(a.vehicleId));
 
@@ -26,12 +48,15 @@ export function AlertasBanner() {
   };
 
   const dismiss = (vehicleId: number) => {
-    setDismissed((prev) => new Set([...prev, vehicleId]));
+    setDismissed((prev) => {
+      const next = new Set([...prev, vehicleId]);
+      saveDismissed(next);
+      return next;
+    });
   };
 
   return (
     <div className="mb-6 space-y-2">
-      {/* Header row */}
       <div className="flex items-center gap-2 px-1">
         <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
         <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider">
@@ -41,14 +66,12 @@ export function AlertasBanner() {
         </span>
       </div>
 
-      {/* Alert cards */}
       {visible.map((alert) => (
         <div
           key={alert.vehicleId}
-          className="flex items-center gap-4 px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/8"
+          className="flex items-center gap-4 px-4 py-3 rounded-xl border border-amber-500/30"
           style={{ backgroundColor: "rgba(245,158,11,0.06)" }}
         >
-          {/* Icon */}
           <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-amber-500">
               <path
@@ -62,7 +85,6 @@ export function AlertasBanner() {
             </svg>
           </div>
 
-          {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono font-bold text-sm text-amber-400 tracking-wider">
@@ -73,11 +95,10 @@ export function AlertasBanner() {
               <span className="text-xs text-muted-foreground">{routeName(alert.routeId)}</span>
             </div>
             <p className="text-xs text-amber-500/80 mt-0.5">
-              Último reporte GPS {silentLabel(alert.minutesSilent)}
+              Ultimo reporte GPS {silentLabel(alert.minutesSilent)}
             </p>
           </div>
 
-          {/* Dismiss */}
           <button
             onClick={() => dismiss(alert.vehicleId)}
             className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"

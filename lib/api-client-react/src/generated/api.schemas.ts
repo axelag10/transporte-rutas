@@ -24,6 +24,13 @@ export interface CreateRoute {
   color?: string;
 }
 
+export interface UpdateRoute {
+  name?: string;
+  description?: string | null;
+  color?: string;
+  active?: boolean;
+}
+
 export interface Stop {
   id: number;
   routeId: number;
@@ -41,11 +48,17 @@ export interface CreateStop {
   order: number;
 }
 
+export interface DeletedResult {
+  ok: boolean;
+  id: number;
+}
+
 export interface Vehicle {
   id: number;
   routeId: number;
   driverName: string;
   plateNumber: string;
+  pin: string;
   active: boolean;
   createdAt: string;
 }
@@ -56,6 +69,14 @@ export interface CreateVehicle {
   plateNumber: string;
   /** PIN de 4 dígitos para autenticar al chofer */
   pin: string;
+}
+
+export interface UpdateVehicle {
+  routeId?: number;
+  driverName?: string;
+  plateNumber?: string;
+  pin?: string;
+  active?: boolean;
 }
 
 export interface VerifyPin {

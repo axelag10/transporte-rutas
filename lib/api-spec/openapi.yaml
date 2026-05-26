@@ -87,6 +87,50 @@ paths:
                 $ref: "#/components/schemas/RouteDetail"
         "404":
           description: No encontrada
+    put:
+      operationId: updateRoute
+      tags: [routes]
+      summary: Edita una ruta existente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoute"
+      responses:
+        "200":
+          description: Ruta actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+        "404":
+          description: No encontrada
+    delete:
+      operationId: deleteRoute
+      tags: [routes]
+      summary: Elimina una ruta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Eliminada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletedResult"
+        "404":
+          description: No encontrada
 
   /routes/{id}/stops:
     get:
@@ -132,6 +176,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/Stop"
 
+  /routes/{id}/stops/{stopId}:
+    delete:
+      operationId: deleteStop
+      tags: [stops]
+      summary: Elimina una parada de la ruta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: stopId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Eliminada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletedResult"
+        "404":
+          description: No encontrada
+
   /vehicles:
     get:
       operationId: listVehicles
@@ -163,6 +233,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Vehicle"
+
+  /vehicles/{id}:
+    put:
+      operationId: updateVehicle
+      tags: [vehicles]
+      summary: Edita un vehículo existente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVehicle"
+      responses:
+        "200":
+          description: Vehículo actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicle"
+        "404":
+          description: No encontrado
+    delete:
+      operationId: deleteVehicle
+      tags: [vehicles]
+      summary: Elimina un vehículo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletedResult"
+        "404":
+          description: No encontrado
 
   /vehicles/{id}/verify-pin:
     post:
@@ -396,6 +512,19 @@ components:
           type: string
       required: [name]
 
+    UpdateRoute:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        color:
+          type: string
+        active:
+          type: boolean
+
     Stop:
       type: object
       properties:
@@ -429,6 +558,15 @@ components:
           type: integer
       required: [name, lat, lng, order]
 
+    DeletedResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        id:
+          type: integer
+      required: [ok, id]
+
     Vehicle:
       type: object
       properties:
@@ -440,12 +578,14 @@ components:
           type: string
         plateNumber:
           type: string
+        pin:
+          type: string
         active:
           type: boolean
         createdAt:
           type: string
           format: date-time
-      required: [id, routeId, driverName, plateNumber, active, createdAt]
+      required: [id, routeId, driverName, plateNumber, pin, active, createdAt]
 
     CreateVehicle:
       type: object
@@ -460,6 +600,20 @@ components:
           type: string
           description: PIN de 4 dígitos para autenticar al chofer
       required: [routeId, driverName, plateNumber, pin]
+
+    UpdateVehicle:
+      type: object
+      properties:
+        routeId:
+          type: integer
+        driverName:
+          type: string
+        plateNumber:
+          type: string
+        pin:
+          type: string
+        active:
+          type: boolean
 
     VerifyPin:
       type: object

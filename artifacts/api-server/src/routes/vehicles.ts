@@ -26,6 +26,37 @@ router.post("/vehicles", async (req, res) => {
   res.status(201).json(vehicle);
 });
 
+const updateVehicleSchema = insertVehicleSchema.partial();
+
+router.put("/vehicles/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const parsed = updateVehicleSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues });
+    return;
+  }
+  const [vehicle] = await db
+    .update(vehiclesTable)
+    .set(parsed.data)
+    .where(eq(vehiclesTable.id, id))
+    .returning();
+  if (!vehicle) {
+    res.status(404).json({ error: "Vehículo no encontrado" });
+    return;
+  }
+  res.json(vehicle);
+});
+
+router.delete("/vehicles/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const [deleted] = await db.delete(vehiclesTable).where(eq(vehiclesTable.id, id)).returning();
+  if (!deleted) {
+    res.status(404).json({ error: "Vehículo no encontrado" });
+    return;
+  }
+  res.json({ ok: true, id });
+});
+
 router.post("/vehicles/:id/verify-pin", async (req, res) => {
   const vehicleId = Number(req.params.id);
   const { pin } = req.body as { pin?: string };
