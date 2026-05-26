@@ -1,1 +1,58 @@
-[]
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567001",
+    "position": 1,
+    "filepath": "src/pages/slides/Portada.tsx",
+    "title": "TransRutas",
+    "description": "Portada — Rastreo GPS en tiempo real para su flotilla",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567002",
+    "position": 2,
+    "filepath": "src/pages/slides/Problema.tsx",
+    "title": "El problema de hoy",
+    "description": "Tres brechas que afectan la operacion diaria",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567003",
+    "position": 3,
+    "filepath": "src/pages/slides/Solucion.tsx",
+    "title": "TransRutas",
+    "description": "La plataforma — tres componentes, una sola solucion",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567004",
+    "position": 4,
+    "filepath": "src/pages/slides/Beneficios.tsx",
+    "title": "Lo que obtiene su empresa",
+    "description": "Beneficios concretos para Grupo AAZ",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567005",
+    "position": 5,
+    "filepath": "src/pages/slides/ComoFunciona.tsx",
+    "title": "Como funciona",
+    "description": "El flujo de operacion paso a paso",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567006",
+    "position": 6,
+    "filepath": "src/pages/slides/ListoParaOperar.tsx",
+    "title": "Listo para operar",
+    "description": "Sin hardware adicional, compatible con cualquier telefono",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567007",
+    "position": 7,
+    "filepath": "src/pages/slides/SiguientePaso.tsx",
+    "title": "Siguiente paso",
+    "description": "Propuesta de prueba piloto sin costo inicial",
+    "speakerNotes": ""
+  }
+]
