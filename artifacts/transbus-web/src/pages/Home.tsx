@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useState } from "react";
 import { useListRoutes } from "@workspace/api-client-react";
 import { useGetRouteLive } from "@workspace/api-client-react";
 
@@ -7,6 +8,7 @@ function RouteCard({ route }: { route: { id: number; name: string; description?:
     query: { refetchInterval: 15000 }
   });
   const vehicleCount = live?.vehicles?.length ?? 0;
+  const [descVisible, setDescVisible] = useState(false);
 
   return (
     <Link href={`/rutas/${route.id}`}>
@@ -22,7 +24,20 @@ function RouteCard({ route }: { route: { id: number; name: string; description?:
                 {route.name}
               </h3>
               {route.description && (
-                <p className="text-sm text-muted-foreground mt-0.5">{route.description}</p>
+                <>
+                  <p className="hidden sm:block text-sm text-muted-foreground mt-0.5">{route.description}</p>
+                  <div className="sm:hidden">
+                    {descVisible && (
+                      <p className="text-sm text-muted-foreground mt-0.5">{route.description}</p>
+                    )}
+                    <button
+                      onClick={(e) => { e.preventDefault(); setDescVisible((v) => !v); }}
+                      className="text-xs text-primary mt-0.5"
+                    >
+                      {descVisible ? "Ocultar" : "Ver descripcion"}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>

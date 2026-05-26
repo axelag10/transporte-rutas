@@ -111,7 +111,7 @@ export default function RouteMap() {
           </button>
         </Link>
         <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: route.color }} />
-        <h1 className="text-xl font-bold text-foreground">{route.name}</h1>
+        <h1 className="text-sm sm:text-xl font-bold text-foreground leading-tight">{route.name}</h1>
         <div className="ml-auto flex items-center gap-2">
           {vehicles.length > 0 ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/15 text-accent text-xs font-medium">
