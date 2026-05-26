@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import type { Stop, VehicleLive } from "@workspace/api-client-react";
 
 interface Props {
@@ -12,122 +13,162 @@ function distancia(lat1: number, lng1: number, lat2: number, lng2: number) {
   return Math.sqrt(dlat * dlat + dlng * dlng);
 }
 
-function vehiculoMasCercano(
+function posicionVehiculo(
   vehicle: VehicleLive,
-  sorted: Stop[]
-): number {
+  sorted: Stop[],
+  step: number,
+  paddingTop: number
+): number | null {
+  if (sorted.length < 2) return null;
   let nearestIdx = 0;
   let nearestDist = Infinity;
   sorted.forEach((s, i) => {
     const d = distancia(vehicle.lat, vehicle.lng, s.lat, s.lng);
     if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
   });
-  return nearestIdx;
+  const nextIdx = nearestIdx < sorted.length - 1 ? nearestIdx + 1 : nearestIdx - 1;
+  const current = sorted[nearestIdx];
+  const next = sorted[nextIdx];
+  const total = distancia(current.lat, current.lng, next.lat, next.lng);
+  const partial = distancia(vehicle.lat, vehicle.lng, current.lat, current.lng);
+  const ratio = total > 0 ? Math.min(partial / total, 1) : 0;
+  const direction = nextIdx > nearestIdx ? 1 : -1;
+  return paddingTop + nearestIdx * step + direction * ratio * step;
 }
 
 export function EsquemaRuta({ stops, vehicles, color }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // useLayoutEffect corre antes de que el navegador pinte, evitando que Chrome
+  // mueva el scroll cuando aparecen los marcadores de vehiculos en el SVG
+  useLayoutEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [vehicles]);
+
   const sorted = [...stops].sort((a, b) => a.order - b.order);
   const n = sorted.length;
-
   if (n === 0) return (
     <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
       Sin paradas registradas
     </div>
   );
 
-  // Índice de parada más cercana por vehículo
-  const vehiclesByStop: Record<number, VehicleLive[]> = {};
-  vehicles.forEach((v) => {
-    const idx = vehiculoMasCercano(v, sorted);
-    if (!vehiclesByStop[idx]) vehiclesByStop[idx] = [];
-    vehiclesByStop[idx].push(v);
-  });
+  const PADDING_TOP = 28;
+  const PADDING_BOTTOM = 28;
+  const STEP = 52;
+  const LINE_X = 32;
+  const SVG_W = 420;
+  const SVG_H = PADDING_TOP + PADDING_BOTTOM + (n - 1) * STEP;
 
   return (
-    <div className="w-full h-full overflow-y-auto overflow-x-hidden">
-      <div className="relative py-5 pl-8 pr-4" style={{ minHeight: n * 52 + 40 }}>
-
-        {/* Línea vertical */}
-        <div
-          className="absolute top-5 bottom-5"
-          style={{
-            left: "1.75rem",
-            width: "2px",
-            backgroundColor: color,
-            opacity: 0.35,
-          }}
+    <div
+      ref={scrollRef}
+      className="w-full h-full overflow-y-auto overflow-x-hidden"
+      style={{ overflowAnchor: "none" }}
+    >
+      <svg
+        width="100%"
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        style={{ minHeight: SVG_H, display: "block" }}
+        aria-label="Esquema de ruta"
+      >
+        {/* ── Línea de ruta ─────────────────────────────────────── */}
+        <line
+          x1={LINE_X} y1={PADDING_TOP}
+          x2={LINE_X} y2={SVG_H - PADDING_BOTTOM}
+          stroke={color} strokeWidth="2.5" strokeOpacity="0.35"
         />
 
+        {/* ── Paradas ────────────────────────────────────────────── */}
         {sorted.map((stop, i) => {
+          const y = PADDING_TOP + i * STEP;
           const isFirst = i === 0;
           const isLast = i === n - 1;
           const isTerminal = isFirst || isLast;
-          const nearVehicles = vehiclesByStop[i] ?? [];
 
           return (
-            <div key={stop.id} style={{ paddingBottom: i < n - 1 ? "1.75rem" : 0 }}>
-              {/* Vehiculos antes de esta parada */}
-              {nearVehicles.map((v) => (
-                <div
-                  key={v.vehicleId}
-                  className="flex items-center gap-2 mb-1"
-                >
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 relative z-10 ring-4"
-                    style={{
-                      backgroundColor: color,
-                      color: "hsl(var(--primary-foreground))",
-                      ringColor: color + "33",
-                    }}
-                  >
-                    B
-                  </div>
-                  <span
-                    className="text-xs font-bold px-2 py-0.5 rounded"
-                    style={{
-                      color: color,
-                      backgroundColor: color + "1a",
-                      border: `1px solid ${color}55`,
-                    }}
-                  >
-                    {v.plateNumber}
-                  </span>
-                </div>
-              ))}
-
-              {/* Parada */}
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center flex-shrink-0 font-bold relative z-10"
-                  style={{
-                    width: isTerminal ? "1.625rem" : "1.25rem",
-                    height: isTerminal ? "1.625rem" : "1.25rem",
-                    borderRadius: "50%",
-                    backgroundColor: isTerminal ? color : "hsl(var(--secondary))",
-                    border: isTerminal ? "none" : `2px solid ${color}`,
-                    color: isTerminal ? "hsl(var(--primary-foreground))" : color,
-                    fontSize: isTerminal ? "0.625rem" : "0.5625rem",
-                  }}
-                >
-                  {i + 1}
-                </div>
-                <span
-                  className="leading-tight"
-                  style={{
-                    fontSize: isTerminal ? "0.78125rem" : "0.71875rem",
-                    fontWeight: isTerminal ? 700 : 400,
-                    color: isTerminal
-                      ? "hsl(var(--foreground))"
-                      : "hsl(var(--muted-foreground))",
-                  }}
-                >
-                  {stop.name}
-                </span>
-              </div>
-            </div>
+            <g key={stop.id}>
+              {/* círculo */}
+              <circle
+                cx={LINE_X} cy={y}
+                r={isTerminal ? 13 : 10}
+                fill={isTerminal ? color : "hsl(var(--secondary))"}
+                stroke={isTerminal ? "none" : color}
+                strokeWidth={isTerminal ? 0 : 2}
+              />
+              {/* número */}
+              <text
+                x={LINE_X} y={y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill={isTerminal ? "hsl(var(--primary-foreground))" : color}
+                fontSize={isTerminal ? 10 : 9}
+                fontWeight="700"
+                fontFamily="system-ui, sans-serif"
+              >
+                {i + 1}
+              </text>
+              {/* nombre */}
+              <text
+                x={LINE_X + 20} y={y}
+                dominantBaseline="central"
+                fill={isTerminal ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))"}
+                fontSize={isTerminal ? 12.5 : 11.5}
+                fontWeight={isTerminal ? "700" : "400"}
+                fontFamily="system-ui, sans-serif"
+              >
+                {stop.name}
+              </text>
+            </g>
           );
         })}
-      </div>
+
+        {/* ── Vehículos activos ──────────────────────────────────── */}
+        {vehicles.map((v) => {
+          const vy = posicionVehiculo(v, sorted, STEP, PADDING_TOP);
+          if (vy === null) return null;
+          return (
+            <g key={v.vehicleId}>
+              <circle cx={LINE_X} cy={vy} r="16" fill={color} fillOpacity="0.18" />
+              <circle cx={LINE_X} cy={vy} r="11" fill={color} />
+              <text
+                x={LINE_X} y={vy}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="hsl(var(--primary-foreground))"
+                fontSize="10"
+                fontWeight="900"
+                fontFamily="system-ui, sans-serif"
+              >
+                B
+              </text>
+              <rect
+                x={LINE_X + 18} y={vy - 11}
+                width={v.plateNumber.length * 6.5 + 12}
+                height={22}
+                rx="5"
+                fill={color}
+                fillOpacity="0.15"
+                stroke={color}
+                strokeWidth="1"
+                strokeOpacity="0.5"
+              />
+              <text
+                x={LINE_X + 24} y={vy}
+                dominantBaseline="central"
+                fill={color}
+                fontSize="10.5"
+                fontWeight="700"
+                fontFamily="system-ui, sans-serif"
+              >
+                {v.plateNumber}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
