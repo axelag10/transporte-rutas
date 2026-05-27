@@ -16,7 +16,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+const replitDomain = process.env.EXPO_PUBLIC_DOMAIN;
+// setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
+setBaseUrl(apiUrl ?? (replitDomain ? `https://${replitDomain}` : null));
 
 SplashScreen.preventAutoHideAsync();
 
