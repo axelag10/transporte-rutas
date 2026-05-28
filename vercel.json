@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://transporte-rutas-production.up.railway.app//api/:path*"
+    }
+  ]
+}
